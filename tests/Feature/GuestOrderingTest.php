@@ -155,7 +155,9 @@ class GuestOrderingTest extends TestCase
         $this->get(route('guest.orders.show', [$company, $order]))
             ->assertOk()
             ->assertSee('Balinese breakfast')
-            ->assertSee('Ход выполнения');
+            ->assertSee('Ход выполнения')
+            ->assertSee('Звонки временно недоступны')
+            ->assertDontSee('Свяжитесь со стойкой регистрации по телефону в номере.');
         $this->get(route('guest.bill', $company))
             ->assertOk()
             ->assertSee('Rp 420.000')

@@ -19,5 +19,6 @@ return [
     'bill_title' => '总账单', 'bill_eyebrow' => '整个入住期间', 'bill_intro' => '此宾客的所有付费服务汇总于此。', 'guest' => '宾客', 'not_specified' => '未填写', 'bill_empty' => '暂无付费服务', 'bill_empty_hint' => '预订付费服务后将显示金额。', 'grand_total' => '服务总额', 'usd_estimate' => '折合美元约', 'rate_note' => '美元换算仅供参考，最终以酒店基础货币结算。', 'cancelled_excluded' => '已取消的请求不计入金额。',
     'current_status' => '当前状态', 'status_title' => '请求状态', 'team_received' => '酒店团队已收到您的请求。', 'accepted_hint' => '工作人员已接单，将很快开始处理。', 'progress_hint' => '您的请求正在处理中。', 'waiting_hint' => '工作人员需要您的补充信息。', 'completed_hint' => '已完成！希望一切令您满意。', 'cancelled_hint' => '此请求已取消，请联系前台了解详情。', 'order_contents' => '请求详情', 'created_at' => '创建于 :date', 'progress' => '处理进度', 'updated_by_team' => '由酒店团队更新', 'created_via_catalog' => '通过服务目录创建', 'need_help' => '需要帮助？', 'help_hint' => '请使用客房电话联系前台。',
     'status' => ['new' => '新请求', 'accepted' => '已接受', 'in_progress' => '处理中', 'waiting_guest' => '等待宾客', 'completed' => '已完成', 'cancelled' => '已取消'],
+    'calls_unavailable_title' => '通话功能暂时不可用', 'calls_unavailable' => '我们正在完善此功能。目前请联系前台。', 'back_to_services' => '返回服务',
     'invalid_access' => '房间号或 PIN 码不正确。', 'invalid_stay_access' => '没有与该房间和 PIN 匹配的有效住宿。', 'stay_until' => '至', 'too_many_attempts' => '尝试次数过多，请一分钟后重试。', 'access_required' => '请输入房间号和 PIN 码。',
 ];
