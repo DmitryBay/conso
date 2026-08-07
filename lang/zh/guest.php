@@ -6,7 +6,8 @@ return [
     'country' => '您的国家', 'other_countries' => '其他国家和语言', 'countries' => ['INT' => '其他国家', 'ID' => '印度尼西亚', 'RU' => '俄罗斯', 'UA' => '乌克兰', 'AE' => '阿联酋', 'IL' => '以色列', 'CN' => '中国', 'KR' => '韩国'],
     'welcome_to' => '欢迎来到', 'access_intro' => '舒适住宿所需的一切，尽在您的设备中。', 'guest_service' => '宾客服务', 'access_title' => '请输入房间信息', 'access_hint' => 'PIN 码位于房内卡片上，也可向前台索取。', 'room_number' => '房间号', 'room_example' => '例如：305', 'pin' => 'PIN 码', 'pin_hint' => '4 位数字', 'your_name' => '您的姓名', 'optional' => '可选', 'name_hint' => '我们该如何称呼您？', 'continue' => '继续', 'secure_access' => '安全访问，仅在入住期间有效',
     'morning' => '早上好', 'afternoon' => '下午好', 'evening' => '晚上好', 'how_help' => '我们能为您做些什么？', 'catalog_intro' => '选择服务后，酒店团队会立即收到一条独立请求。', 'quick_choice' => '快捷选择', 'popular' => '热门服务', 'catalog' => '服务目录', 'all_services' => '全部服务', 'services_count' => ':count 项服务', 'free' => '免费', 'minutes' => '约 :count 分钟', 'order_service' => '预订 :service', 'catalog_empty' => '目录正在准备中', 'catalog_empty_hint' => '请联系前台。', 'category_empty' => '此分类目前没有可用服务。',
-    'guides_eyebrow' => '度假灵感', 'guides_title' => '巴厘岛行程', 'mini_guide' => '迷你指南', 'trip_plan' => '旅行计划', 'guide_for_stay' => '适合您的入住时长', 'close' => '关闭', 'got_it' => '知道了',
+    'guides_eyebrow' => '度假灵感', 'guides_title' => '巴厘岛行程', 'guides_count' => ':count 条路线', 'mini_guide' => '迷你指南', 'trip_plan' => '旅行计划', 'guide_for_stay' => '适合您的入住时长', 'close' => '关闭', 'got_it' => '知道了',
+    'sections' => '分类',
     'mini_guides' => [
         'one_day' => ['title' => '巴厘岛一日游', 'summary' => '海洋、乌鲁瓦图寺与日落', 'intro' => '轻松游览巴厘岛南部，减少长途乘车。', 'tips' => ['上午——安静的海滩和海边早餐。', '下午——游览南部海岸并享用当地午餐。', '傍晚——乌鲁瓦图寺、日落和 Kecak 舞表演。']],
         'two_days' => ['title' => '两日度假', 'summary' => '南部海岸与文化之都乌布', 'intro' => '舒适而充实的两天，兼顾海洋与巴厘岛绿色腹地。', 'tips' => ['第1天——海滩、乌鲁瓦图、日落与海滨晚餐。', '第2天——德格拉朗梯田、乌布中心、市场和 Spa。']],

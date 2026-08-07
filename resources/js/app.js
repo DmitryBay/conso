@@ -22,6 +22,49 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     });
 }
 
+document.querySelectorAll('[data-guest-menu]').forEach(menu => {
+    const track = menu.querySelector('[data-menu-track]');
+    const pages = [...menu.querySelectorAll('[data-menu-page]')];
+    const previous = menu.querySelector('[data-menu-prev]');
+    const next = menu.querySelector('[data-menu-next]');
+    const dots = [...menu.querySelectorAll('[data-menu-dot]')];
+    let activePage = 0;
+    let scrollFrame;
+
+    const update = index => {
+        activePage = Math.max(0, Math.min(index, pages.length - 1));
+        if (previous) previous.disabled = activePage === 0;
+        if (next) next.disabled = activePage === pages.length - 1;
+        dots.forEach((dot, dotIndex) => {
+            dot.classList.toggle('active', dotIndex === activePage);
+            if (dotIndex === activePage) dot.setAttribute('aria-current', 'true');
+            else dot.removeAttribute('aria-current');
+        });
+    };
+
+    const goTo = index => {
+        const target = pages[Math.max(0, Math.min(index, pages.length - 1))];
+        if (!target) return;
+        track.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
+        update(pages.indexOf(target));
+    };
+
+    previous?.addEventListener('click', () => goTo(activePage - 1));
+    next?.addEventListener('click', () => goTo(activePage + 1));
+    dots.forEach(dot => dot.addEventListener('click', () => goTo(Number(dot.dataset.menuDot))));
+    track.addEventListener('scroll', () => {
+        cancelAnimationFrame(scrollFrame);
+        scrollFrame = requestAnimationFrame(() => {
+            const closest = pages.reduce((best, page, index) => (
+                Math.abs(page.offsetLeft - track.scrollLeft) < Math.abs(pages[best].offsetLeft - track.scrollLeft) ? index : best
+            ), 0);
+            update(closest);
+        });
+    }, { passive: true });
+    window.addEventListener('resize', () => track.scrollTo({ left: pages[activePage]?.offsetLeft ?? 0 }));
+    update(0);
+});
+
 const pushSettings = document.getElementById('pushSettings');
 
 if (pushSettings) {

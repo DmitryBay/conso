@@ -2,43 +2,62 @@
 @section('title', __('guest.services'))
 @section('content')
 @php
-    $firstName = app('guestStay')->guest_name ? str(app('guestStay')->guest_name)->before(' ') : null;
-    $greeting = now()->hour < 12 ? __('guest.morning') : (now()->hour < 18 ? __('guest.afternoon') : __('guest.evening'));
     $money = app(\App\Support\Money::class);
-@endphp
-<section class="guest-hero"><div><span class="eyebrow">{{ $greeting }}{{ $firstName ? ', '.$firstName : '' }}</span><h1>{{ __('guest.how_help') }}</h1><p>{{ __('guest.catalog_intro') }}</p></div><span class="guest-hero-icon"><i class="bi bi-bell"></i></span></section>
-
-@php
     $guideIcons = ['one_day' => 'bi-compass', 'two_days' => 'bi-map', 'three_days' => 'bi-signpost-2', 'five_days' => 'bi-calendar2-week'];
     $guideDurations = ['one_day' => 1, 'two_days' => 2, 'three_days' => 3, 'five_days' => 5];
     $miniGuides = __('guest.mini_guides');
     $stayNights = app('guestStay')->stay->nights;
     $recommendedDuration = collect($guideDurations)->filter(fn ($days) => $days <= $stayNights)->max() ?: 1;
+    $menuItems = $categories->values()
+        ->map(fn ($category) => ['type' => 'category', 'category' => $category])
+        ->push(['type' => 'guides']);
+    $menuPages = $menuItems->chunk(6);
 @endphp
-<section class="guest-section guest-guides"><div class="guest-section-title"><div><span class="eyebrow">{{ __('guest.guides_eyebrow') }}</span><h2>{{ __('guest.guides_title') }}</h2></div><span>{{ count($miniGuides) }}</span></div>
-<div class="guest-guides-scroll">
-@foreach($miniGuides as $guideKey => $guide)
-    <button class="guest-guide-card {{ $guideDurations[$guideKey] === $recommendedDuration ? 'recommended' : '' }}" type="button" data-bs-toggle="modal" data-bs-target="#guestGuide-{{ $guideKey }}">
-        <span class="guest-guide-icon"><i class="bi {{ $guideIcons[$guideKey] ?? 'bi-book' }}"></i></span>
-        <span><strong>{{ $guide['title'] }}</strong><small>{{ $guide['summary'] }}</small>@if($guideDurations[$guideKey] === $recommendedDuration)<em>{{ __('guest.guide_for_stay') }}</em>@endif</span>
-        <i class="bi bi-arrow-up-right"></i>
-    </button>
-@endforeach
+
+<section class="guest-section service-catalog"><div class="guest-section-title"><div><span class="eyebrow">{{ __('guest.catalog') }}</span><h2>{{ __('guest.sections') }}</h2></div><span>{{ $menuItems->count() }}</span></div>
+<div class="guest-main-menu" data-guest-menu data-page-size="6">
+    <div class="guest-menu-track" data-menu-track>
+    @foreach($menuPages as $page)
+        <div class="guest-menu-page" data-menu-page>
+        @foreach($page as $menuItem)
+            @if($menuItem['type'] === 'guides')
+                <button class="guest-menu-tile guest-menu-tile-guides" type="button" data-bs-toggle="modal" data-bs-target="#guestGuideMenu" style="--service-bg:url('{{ asset('images/background-packs/ocean-resort.webp') }}')"><span><i class="bi bi-compass"></i></span><strong>{{ __('guest.guides_title') }}</strong><small>{{ __('guest.guides_count', ['count' => count($miniGuides)]) }}</small><i class="bi bi-arrow-up-right"></i></button>
+            @else
+                @php
+                    $category = $menuItem['category'];
+                    $categoryServices = $category->children->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true))->merge($category->children->filter(fn($node) => $node->type === \App\Enums\ServiceNodeType::Category)->flatMap(fn($node) => $node->children))->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true));
+                    $menuBackground = $category->resolvedBackground($company);
+                    $legacyKey = match($loop->parent->index * 6 + $loop->index) { 0=>'food',1=>'room',2=>'transport',3=>'wellness',4=>'transport',default=>'room' };
+                @endphp
+                <button class="guest-menu-tile" type="button" data-bs-toggle="modal" data-bs-target="#guestCategory-{{ $category->id }}" style="--service-bg:url('{{ $menuBackground?->url() ?? asset('images/service-backgrounds/'.$legacyKey.'.jpg') }}');--service-position:{{ $menuBackground?->background_position ?? 'center' }};--service-size:{{ $menuBackground?->background_size ?? 'cover' }}"><span><i class="bi {{ $category->icon ?: 'bi-grid' }}"></i></span><strong>{{ $category->localizedName() }}</strong><small>{{ __('guest.services_count',['count'=>$categoryServices->count()]) }}</small><i class="bi bi-arrow-up-right"></i></button>
+            @endif
+        @endforeach
+        </div>
+    @endforeach
+    </div>
+    @if($menuPages->count() > 1)
+        <div class="guest-menu-pagination">
+            <button type="button" data-menu-prev aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
+            <div class="guest-menu-dots">
+                @foreach($menuPages as $page)<button class="{{ $loop->first ? 'active' : '' }}" type="button" data-menu-dot="{{ $loop->index }}" aria-label="{{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif></button>@endforeach
+            </div>
+            <button type="button" data-menu-next aria-label="Next"><i class="bi bi-chevron-right"></i></button>
+        </div>
+    @endif
 </div></section>
 
-<section class="guest-section service-catalog"><div class="guest-section-title"><div><span class="eyebrow">{{ __('guest.catalog') }}</span><h2>{{ __('guest.all_services') }}</h2></div><span>{{ $categories->count() }}</span></div>
-<div class="guest-main-menu">
-@forelse($categories as $category)
-    @php
-        $categoryServices = $category->children->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true))->merge($category->children->filter(fn($node) => $node->type === \App\Enums\ServiceNodeType::Category)->flatMap(fn($node) => $node->children))->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true));
-        $menuBackground = $category->resolvedBackground($company);
-        $legacyKey = match($loop->index) { 0=>'food',1=>'room',2=>'transport',3=>'wellness',4=>'transport',default=>'room' };
-    @endphp
-    <button class="guest-menu-tile" type="button" data-bs-toggle="modal" data-bs-target="#guestCategory-{{ $category->id }}" style="--service-bg:url('{{ $menuBackground?->url() ?? asset('images/service-backgrounds/'.$legacyKey.'.jpg') }}');--service-position:{{ $menuBackground?->background_position ?? 'center' }};--service-size:{{ $menuBackground?->background_size ?? 'cover' }}"><span><i class="bi {{ $category->icon ?: 'bi-grid' }}"></i></span><strong>{{ $category->localizedName() }}</strong><small>{{ __('guest.services_count',['count'=>$categoryServices->count()]) }}</small><i class="bi bi-arrow-up-right"></i></button>
-@empty
-    <div class="guest-empty"><i class="bi bi-stars"></i><h2>{{ __('guest.catalog_empty') }}</h2><p>{{ __('guest.catalog_empty_hint') }}</p></div>
-@endforelse
-</div></section>
+<div class="modal fade guest-guide-modal" id="guestGuideMenu" tabindex="-1" aria-labelledby="guestGuideMenuTitle" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><span class="guest-guide-modal-icon"><i class="bi bi-compass"></i></span><div><small>{{ __('guest.guides_eyebrow') }}</small><h2 class="modal-title" id="guestGuideMenuTitle">{{ __('guest.guides_title') }}</h2></div><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="{{ __('guest.close') }}"></button></div>
+    <div class="modal-body"><div class="guest-guide-menu-grid">
+    @foreach($miniGuides as $guideKey => $guide)
+        <button class="guest-guide-card {{ $guideDurations[$guideKey] === $recommendedDuration ? 'recommended' : '' }}" type="button" data-bs-toggle="modal" data-bs-target="#guestGuide-{{ $guideKey }}">
+            <span class="guest-guide-icon"><i class="bi {{ $guideIcons[$guideKey] ?? 'bi-book' }}"></i></span>
+            <span><strong>{{ $guide['title'] }}</strong><small>{{ $guide['summary'] }}</small>@if($guideDurations[$guideKey] === $recommendedDuration)<em>{{ __('guest.guide_for_stay') }}</em>@endif</span>
+            <i class="bi bi-arrow-up-right"></i>
+        </button>
+    @endforeach
+    </div></div>
+</div></div></div>
 
 @foreach($categories as $category)
     @php

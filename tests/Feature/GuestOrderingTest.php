@@ -193,7 +193,7 @@ class GuestOrderingTest extends TestCase
 
         $this->get(route('guest.catalog', $company).'?lang=uk')
             ->assertOk()
-            ->assertSee('Чим можемо допомогти?')
+            ->assertDontSee('Чим можемо допомогти?')
             ->assertSee('Додаткові рушники');
     }
 
@@ -219,6 +219,10 @@ class GuestOrderingTest extends TestCase
             ->assertSee('Bali itineraries')
             ->assertSee('A 2-day escape')
             ->assertSee('Fits your stay')
+            ->assertSee('data-guest-menu', false)
+            ->assertSee('data-page-size="6"', false)
+            ->assertSee('data-bs-target="#guestGuideMenu"', false)
+            ->assertDontSee('guest-hero', false)
             ->assertSee('guest-guide-modal', false)
             ->assertSee('guest-subcategory', false);
     }
