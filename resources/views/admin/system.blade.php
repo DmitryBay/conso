@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('title','Состояние системы')
+@section('content')
+<div class="mb-4"><div class="eyebrow">Диагностика</div><h1 class="page-title">Состояние системы</h1><p class="page-subtitle">Подключения и фоновые процессы Luma Concierge.</p></div>
+<div class="row g-3 mb-4">@foreach([['Очередь',$stats['jobs'],'bi-stack'],['Ошибки',$stats['failed_jobs'],'bi-exclamation-triangle'],['Push-устройства',$stats['push_subscriptions'],'bi-phone']] as $item)<div class="col-md-4"><div class="surface-card metric-card"><span class="metric-icon"><i class="bi {{ $item[2] }}"></i></span><div class="metric-value">{{ $item[1] }}</div><div class="metric-label">{{ $item[0] }}</div></div></div>@endforeach</div>
+<div class="surface-card overflow-hidden"><div class="p-4 border-bottom"><h2 class="section-title">Проверка подключений</h2><div class="text-secondary small mt-1">Секретные ключи здесь не показываются.</div></div><div class="notification-list">@foreach($checks as [$name,$ok,$message])<div class="notification-item"><span class="notification-icon {{ $ok ? '' : 'text-danger' }}"><i class="bi {{ $ok ? 'bi-check2-circle' : 'bi-exclamation-circle' }}"></i></span><span class="flex-grow-1"><strong>{{ $name }}</strong><span class="notification-body">{{ $message }}</span></span><span class="badge-soft-{{ $ok ? 'success' : 'warning' }}">{{ $ok ? 'Работает' : 'Проверьте' }}</span></div>@endforeach</div></div>
+<div class="d-flex flex-wrap justify-content-between gap-2 text-secondary small mt-3"><span>Laravel {{ app()->version() }} · PHP {{ PHP_VERSION }} · {{ app()->environment() }}</span><span>Поддержка: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></span></div>
+@endsection

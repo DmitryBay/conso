@@ -1,0 +1,22 @@
+<?php
+
+return [
+    'open_in_maps'=>'Google 地图地点','maps_hint'=>'将在新窗口打开',
+    'language' => '语言', 'hotel' => '您的酒店', 'room' => '房间', 'services' => '服务', 'orders' => '订单', 'bill' => '账单', 'logout' => '退出',
+    'country' => '您的国家', 'other_countries' => '其他国家和语言', 'countries' => ['INT' => '其他国家', 'ID' => '印度尼西亚', 'RU' => '俄罗斯', 'UA' => '乌克兰', 'AE' => '阿联酋', 'IL' => '以色列', 'CN' => '中国', 'KR' => '韩国'],
+    'welcome_to' => '欢迎来到', 'access_intro' => '舒适住宿所需的一切，尽在您的设备中。', 'guest_service' => '宾客服务', 'access_title' => '请输入房间信息', 'access_hint' => 'PIN 码位于房内卡片上，也可向前台索取。', 'room_number' => '房间号', 'room_example' => '例如：305', 'pin' => 'PIN 码', 'pin_hint' => '4 位数字', 'your_name' => '您的姓名', 'optional' => '可选', 'name_hint' => '我们该如何称呼您？', 'continue' => '继续', 'secure_access' => '安全访问，仅在入住期间有效',
+    'morning' => '早上好', 'afternoon' => '下午好', 'evening' => '晚上好', 'how_help' => '我们能为您做些什么？', 'catalog_intro' => '选择服务后，酒店团队会立即收到一条独立请求。', 'quick_choice' => '快捷选择', 'popular' => '热门服务', 'catalog' => '服务目录', 'all_services' => '全部服务', 'services_count' => ':count 项服务', 'free' => '免费', 'minutes' => '约 :count 分钟', 'order_service' => '预订 :service', 'catalog_empty' => '目录正在准备中', 'catalog_empty_hint' => '请联系前台。', 'category_empty' => '此分类目前没有可用服务。',
+    'guides_eyebrow' => '度假灵感', 'guides_title' => '巴厘岛行程', 'mini_guide' => '迷你指南', 'trip_plan' => '旅行计划', 'guide_for_stay' => '适合您的入住时长', 'close' => '关闭', 'got_it' => '知道了',
+    'mini_guides' => [
+        'one_day' => ['title' => '巴厘岛一日游', 'summary' => '海洋、乌鲁瓦图寺与日落', 'intro' => '轻松游览巴厘岛南部，减少长途乘车。', 'tips' => ['上午——安静的海滩和海边早餐。', '下午——游览南部海岸并享用当地午餐。', '傍晚——乌鲁瓦图寺、日落和 Kecak 舞表演。']],
+        'two_days' => ['title' => '两日度假', 'summary' => '南部海岸与文化之都乌布', 'intro' => '舒适而充实的两天，兼顾海洋与巴厘岛绿色腹地。', 'tips' => ['第1天——海滩、乌鲁瓦图、日落与海滨晚餐。', '第2天——德格拉朗梯田、乌布中心、市场和 Spa。']],
+        'three_days' => ['title' => '巴厘岛三日游', 'summary' => '海岸、乌布与金塔马尼高地', 'intro' => '在短时间内感受巴厘岛的自然、文化与多样景观。', 'tips' => ['第1天——南部海滩与乌鲁瓦图之夜。', '第2天——德格拉朗、乌布与巴厘艺术。', '第3天——金塔马尼、巴杜尔火山景观及沿途停留。']],
+        'five_days' => ['title' => '巴厘岛五日游', 'summary' => '从容体验海洋、文化与自然', 'intro' => '在游览和休息之间取得平衡的行程。', 'tips' => ['第1天——海边放松并适应环境。', '第2天——乌鲁瓦图与日落 Kecak 舞。', '第3天——乌布、德格拉朗与 Spa。', '第4天——金塔马尼和高地风光。', '第5天——自由上午、选购纪念品与告别晚餐。']],
+    ],
+    'order' => '预订服务', 'order_step' => '一项服务，一条请求', 'quantity' => '数量', 'price_per_item' => '单价', 'base_currency' => '基础货币：:currency', 'approx_usd' => '折合美元约', 'payment_method' => '付款方式', 'payment_hint' => '选择方便的方式', 'room_charge' => '记入房账', 'room_charge_hint' => '加入本次入住的总账单', 'cash' => '现金', 'cash_hint' => '向酒店工作人员支付', 'comment' => '订单备注', 'comment_hint' => '例如：下午 2 点后送达', 'total' => '合计', 'submit_order' => '提交请求', 'order_notice' => '酒店团队将立即收到您的请求。', 'order_sent' => '请求已发送给酒店团队。',
+    'stay_history' => '入住记录', 'my_orders' => '我的请求', 'no_orders' => '暂无请求', 'no_orders_hint' => '您的请求及状态将显示在这里。', 'choose_service' => '选择服务', 'order_number' => '请求 #:number', 'items_count' => ':count 项',
+    'bill_title' => '总账单', 'bill_eyebrow' => '整个入住期间', 'bill_intro' => '此宾客的所有付费服务汇总于此。', 'guest' => '宾客', 'not_specified' => '未填写', 'bill_empty' => '暂无付费服务', 'bill_empty_hint' => '预订付费服务后将显示金额。', 'grand_total' => '服务总额', 'usd_estimate' => '折合美元约', 'rate_note' => '美元换算仅供参考，最终以酒店基础货币结算。', 'cancelled_excluded' => '已取消的请求不计入金额。',
+    'current_status' => '当前状态', 'status_title' => '请求状态', 'team_received' => '酒店团队已收到您的请求。', 'accepted_hint' => '工作人员已接单，将很快开始处理。', 'progress_hint' => '您的请求正在处理中。', 'waiting_hint' => '工作人员需要您的补充信息。', 'completed_hint' => '已完成！希望一切令您满意。', 'cancelled_hint' => '此请求已取消，请联系前台了解详情。', 'order_contents' => '请求详情', 'created_at' => '创建于 :date', 'progress' => '处理进度', 'updated_by_team' => '由酒店团队更新', 'created_via_catalog' => '通过服务目录创建', 'need_help' => '需要帮助？', 'help_hint' => '请使用客房电话联系前台。',
+    'status' => ['new' => '新请求', 'accepted' => '已接受', 'in_progress' => '处理中', 'waiting_guest' => '等待宾客', 'completed' => '已完成', 'cancelled' => '已取消'],
+    'invalid_access' => '房间号或 PIN 码不正确。', 'invalid_stay_access' => '没有与该房间和 PIN 匹配的有效住宿。', 'stay_until' => '至', 'too_many_attempts' => '尝试次数过多，请一分钟后重试。', 'access_required' => '请输入房间号和 PIN 码。',
+];

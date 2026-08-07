@@ -1,0 +1,14 @@
+@extends('layouts.admin')
+@section('title', 'Обзор')
+@section('content')
+<div class="d-flex align-items-end justify-content-between gap-3 mb-4"><div><div class="eyebrow">Обзор платформы</div><h1 class="page-title">Добрый день, {{ str(auth()->user()->name)->before(' ') }}</h1><p class="page-subtitle">Сводка по подключённым отелям и состоянию аккаунтов.</p></div><div class="page-actions"><a class="btn btn-primary" href="{{ route('platform.companies.create') }}"><i class="bi bi-plus-lg me-sm-2"></i><span>Новая компания</span></a></div></div>
+<div class="row g-3 mb-4">
+@foreach([['Всего компаний',$stats['companies'],'bi-buildings','Все аккаунты'],['Активные',$stats['active'],'bi-check2-circle','Работают'],['Пробный период',$stats['trial'],'bi-hourglass-split','14 дней'],['Номерной фонд',number_format($stats['rooms'],0,',',' '),'bi-door-open','Номеров']] as $metric)
+<div class="col-6 col-xl-3"><div class="surface-card metric-card"><div class="d-flex justify-content-between"><span class="metric-icon"><i class="bi {{ $metric[2] }}"></i></span><span class="metric-trend">{{ $metric[3] }}</span></div><div class="metric-value">{{ $metric[1] }}</div><div class="metric-label">{{ $metric[0] }}</div></div></div>
+@endforeach
+</div>
+<div class="surface-card overflow-hidden"><div class="d-flex align-items-center justify-content-between p-4 border-bottom"><div><h2 class="section-title">Недавно добавлены</h2><div class="text-secondary mt-1" style="font-size:12px">Последние компании на платформе</div></div><a class="btn btn-light btn-sm" href="{{ route('platform.companies.index') }}">Все компании <i class="bi bi-arrow-right ms-1"></i></a></div>
+<div class="table-responsive"><table class="table"><thead><tr><th>Компания</th><th>Владелец</th><th>Номера</th><th>Статус</th><th></th></tr></thead><tbody>
+@forelse($companies as $company)<tr><td><div class="d-flex align-items-center gap-3"><span class="company-logo">{{ mb_strtoupper(mb_substr($company->name,0,2)) }}</span><div><a class="text-dark fw-semibold" href="{{ route('platform.companies.show',$company) }}">{{ $company->name }}</a><div class="text-secondary" style="font-size:11px">{{ $company->slug }}</div></div></div></td><td><div class="small fw-semibold">{{ $company->owner?->name ?? 'Не назначен' }}</div><div class="text-secondary" style="font-size:11px">{{ $company->owner?->email }}</div></td><td class="small fw-semibold">{{ $company->rooms_count }}</td><td><span class="badge-soft-{{ $company->status->color() }}"><span class="status-dot bg-{{ $company->status->color() }}"></span>{{ $company->status->label() }}</span></td><td><a class="btn btn-light btn-sm" href="{{ route('platform.companies.show',$company) }}"><i class="bi bi-chevron-right"></i></a></td></tr>@empty<tr><td colspan="5" class="text-center py-5 text-secondary">Пока нет компаний. Создайте первую.</td></tr>@endforelse
+</tbody></table></div></div>
+@endsection
