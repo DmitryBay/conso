@@ -37,6 +37,9 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 Route::post('/demo/platform-login', [AuthenticatedSessionController::class, 'demoPlatformLogin'])->name('demo.platform-login');
+Route::get('/auto-login/platform', [AuthenticatedSessionController::class, 'signedPlatformLogin'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('auto-login.platform');
 Route::post('/impersonation/stop', [ImpersonationController::class, 'stop'])->middleware('auth')->name('impersonation.stop');
 
 Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale')->group(function () {

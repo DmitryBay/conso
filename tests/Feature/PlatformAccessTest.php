@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class PlatformAccessTest extends TestCase
@@ -45,5 +46,29 @@ class PlatformAccessTest extends TestCase
             ->assertRedirect(route('platform.dashboard'));
 
         $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_signed_auto_login_switches_to_platform_admin(): void
+    {
+        $owner = User::factory()->create(['role' => UserRole::CompanyOwner]);
+        $admin = User::factory()->create([
+            'email' => 'admin@luma.test',
+            'role' => UserRole::SuperAdmin,
+            'company_id' => null,
+            'is_active' => true,
+        ]);
+        $url = URL::temporarySignedRoute('auto-login.platform', now()->addMinute());
+
+        $this->actingAs($owner)
+            ->get($url)
+            ->assertRedirect(route('platform.dashboard'));
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_auto_login_rejects_an_unsigned_link(): void
+    {
+        $this->get(route('auto-login.platform'))->assertForbidden();
+        $this->assertGuest();
     }
 }

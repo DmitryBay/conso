@@ -51,12 +51,27 @@ class AuthenticatedSessionController extends Controller
     {
         abort_unless(app()->environment(['local', 'testing']), 404);
 
-        $admin = User::query()
+        $admin = $this->activePlatformAdmin();
+
+        return $this->loginAsPlatformAdmin($request, $admin);
+    }
+
+    public function signedPlatformLogin(Request $request): RedirectResponse
+    {
+        return $this->loginAsPlatformAdmin($request, $this->activePlatformAdmin());
+    }
+
+    private function activePlatformAdmin(): User
+    {
+        return User::query()
             ->where('email', 'admin@luma.test')
             ->where('role', UserRole::SuperAdmin)
             ->where('is_active', true)
             ->firstOrFail();
+    }
 
+    private function loginAsPlatformAdmin(Request $request, User $admin): RedirectResponse
+    {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
