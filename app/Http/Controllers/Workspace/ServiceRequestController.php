@@ -136,27 +136,45 @@ class ServiceRequestController extends Controller
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
         $to = RequestStatus::from($data['status']);
-        $from = $serviceRequest->status;
-        if ($serviceRequest->guest_stay_id && $to === RequestStatus::Completed && $from !== RequestStatus::Completed) {
-            throw ValidationException::withMessages(['status' => __('workspace.guest_confirmation_required')]);
-        }
         $assignee = $this->tenantMember($request->user()->company_id, $data['assigned_to'] ?? $serviceRequest->assigned_to);
 
-        DB::transaction(function () use ($request, $serviceRequest, $data, $from, $to, $assignee) {
-            $serviceRequest->update([
+        $from = DB::transaction(function () use ($request, $serviceRequest, $data, $to, $assignee) {
+            $lockedRequest = ServiceRequest::query()->lockForUpdate()->findOrFail($serviceRequest->id);
+            $from = $lockedRequest->status;
+            if (
+                $lockedRequest->guest_stay_id
+                && $to === RequestStatus::Completed
+                && $from !== RequestStatus::Completed
+                && ! in_array($from, [RequestStatus::Ready, RequestStatus::WaitingGuest], true)
+            ) {
+                throw ValidationException::withMessages(['status' => __('workspace.guest_confirmation_required')]);
+            }
+
+            $lockedRequest->update([
                 'status' => $to,
                 'assigned_to' => $assignee?->id,
-                'accepted_at' => $to !== RequestStatus::New ? ($serviceRequest->accepted_at ?? now()) : $serviceRequest->accepted_at,
-                'completed_at' => $to === RequestStatus::Completed ? now() : null,
+                'accepted_at' => $to !== RequestStatus::New ? ($lockedRequest->accepted_at ?? now()) : $lockedRequest->accepted_at,
+                'completed_at' => $to === RequestStatus::Completed ? ($lockedRequest->completed_at ?? now()) : null,
+                'payment_status' => $lockedRequest->guest_stay_id
+                    && $to === RequestStatus::Completed
+                    && $lockedRequest->payment_method === 'room_charge'
+                    && $lockedRequest->price_minor > 0
+                        ? 'invoiced'
+                        : $lockedRequest->payment_status,
             ]);
-            $serviceRequest->history()->create([
+            $lockedRequest->history()->create([
                 'user_id' => $request->user()->id,
                 'from_status' => $from->value,
                 'to_status' => $to->value,
-                'note' => $data['note'] ?? null,
+                'note' => $data['note'] ?? ($lockedRequest->guest_stay_id && $to === RequestStatus::Completed && $from !== RequestStatus::Completed
+                    ? 'workspace.history_manager_confirmed'
+                    : null),
                 'created_at' => now(),
             ]);
+
+            return $from;
         });
+        $serviceRequest->refresh();
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_status_changed', 'workspace.notification_status_body', [
             'room' => $serviceRequest->room_number,

@@ -157,9 +157,13 @@ class GuestOrderingTest extends TestCase
         $this->get(route('guest.orders.show', [$company, $order]))
             ->assertOk()
             ->assertSee('Balinese breakfast')
-            ->assertSee('Ход выполнения')
-            ->assertSee('Прогресс работы')
-            ->assertSee('10% выполнено')
+            ->assertSee('Ход задачи')
+            ->assertSee('История статусов')
+            ->assertSee('Ожидает принятия в работу')
+            ->assertSee('Принята в работу')
+            ->assertSee('Обрабатывается')
+            ->assertSee('Ожидает подтверждения')
+            ->assertDontSee('10% выполнено')
             ->assertSee('data-progress="10"', false)
             ->assertSee('Заказ создан гостем через каталог')
             ->assertDontSee('workspace.history_guest')
@@ -167,12 +171,19 @@ class GuestOrderingTest extends TestCase
             ->assertDontSee('Свяжитесь со стойкой регистрации по телефону в номере.');
         $this->get(route('guest.orders.show', [$company, $order]).'?lang=en')
             ->assertOk()
-            ->assertSee('10% complete')
+            ->assertSee('Awaiting acceptance')
+            ->assertSee('Accepted for work')
+            ->assertSee('Processing')
+            ->assertSee('Awaiting confirmation')
+            ->assertDontSee('10% complete')
             ->assertSee('Order created by the guest from the catalog')
             ->assertDontSee('workspace.history_guest');
         $this->get(route('guest.orders.index', $company).'?lang=ru')
             ->assertOk()
-            ->assertSee('10% выполнено')
+            ->assertSee('Ожидает принятия в работу')
+            ->assertSee('Ход выполнения')
+            ->assertSee('order-progress-segments', false)
+            ->assertDontSee('10% выполнено')
             ->assertSee('data-progress="10"', false);
         $this->get(route('guest.bill', $company).'?lang=ru')
             ->assertOk()
@@ -192,7 +203,8 @@ class GuestOrderingTest extends TestCase
 
         $this->withSession($session)->get(route('guest.orders.show', [$company, $order]))
             ->assertOk()
-            ->assertSee('90% выполнено')
+            ->assertSee('Ожидает подтверждения')
+            ->assertDontSee('90% выполнено')
             ->assertSee('data-progress="90"', false)
             ->assertSee('Подтвердите получение')
             ->assertSee('Подтвердить и завершить');
@@ -213,13 +225,66 @@ class GuestOrderingTest extends TestCase
         $this->assertSame(2, $owner->notifications()->count());
         $this->withSession($session)->get(route('guest.orders.show', [$company, $order]))
             ->assertOk()
-            ->assertSee('100% выполнено')
+            ->assertSee('Завершена')
+            ->assertDontSee('100% выполнено')
             ->assertSee('data-progress="100"', false);
         $this->withSession($session)->get(route('guest.bill', $company))
             ->assertOk()
             ->assertSee('Rp 420.000')
             ->assertSee('≈ $25.45');
         Event::assertDispatched(ServiceRequestChanged::class);
+    }
+
+    public function test_manager_can_confirm_a_ready_guest_order_and_add_it_to_the_room_bill(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $manager = User::factory()->create([
+            'company_id' => $company->id,
+            'role' => UserRole::Manager,
+            'is_active' => true,
+        ]);
+        $service = $this->service($company, 'Dinner service', 350000);
+        $stay = $this->stay($company, $room);
+        $session = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($session)->post(route('guest.orders.store', [$company, $service]), [
+            'quantity' => 1,
+            'payment_method' => 'room_charge',
+        ])->assertRedirect();
+
+        $order = ServiceRequest::firstOrFail();
+        $this->actingAs($manager)->get(route('workspace.requests.show', $order))
+            ->assertOk()
+            ->assertDontSee('<option value="completed"', false);
+
+        $this->patch(route('workspace.requests.status', $order), [
+            'status' => RequestStatus::Ready->value,
+        ])->assertRedirect();
+
+        $this->get(route('workspace.requests.show', $order))
+            ->assertOk()
+            ->assertSee('<option value="completed"', false)
+            ->assertSee('На финальном этапе выполнение может подтвердить гость или менеджер.');
+
+        $this->patch(route('workspace.requests.status', $order), [
+            'status' => RequestStatus::Completed->value,
+        ])->assertRedirect();
+
+        $order->refresh();
+        $this->assertSame(RequestStatus::Completed, $order->status);
+        $this->assertSame('invoiced', $order->payment_status);
+        $this->assertNotNull($order->completed_at);
+        $this->assertDatabaseHas('service_request_status_histories', [
+            'service_request_id' => $order->id,
+            'user_id' => $manager->id,
+            'from_status' => RequestStatus::Ready->value,
+            'to_status' => RequestStatus::Completed->value,
+            'note' => 'workspace.history_manager_confirmed',
+        ]);
+        $this->withSession($session)->get(route('guest.bill', $company))
+            ->assertOk()
+            ->assertSee('Dinner service')
+            ->assertSee('Rp 350.000');
     }
 
     public function test_cash_order_is_paid_immediately_and_excluded_from_room_bill(): void

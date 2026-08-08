@@ -109,7 +109,7 @@ class GuestNotificationTest extends TestCase
         );
 
         $mail = (new GuestRequestStatusNotification($serviceRequest->fresh()->load(['company', 'service']), true))->toMail($session->fresh()->load('stay'));
-        $this->assertSame('Permintaan: Diproses · '.$company->name, $mail->subject);
+        $this->assertSame('Permintaan: Sedang diproses · '.$company->name, $mail->subject);
         $this->assertSame('Buka permintaan', $mail->actionText);
     }
 

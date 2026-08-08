@@ -21,7 +21,7 @@ class RequestStatusProgressTest extends TestCase
             'new' => [RequestStatus::New, 10, 0],
             'accepted' => [RequestStatus::Accepted, 30, 1],
             'in progress' => [RequestStatus::InProgress, 60, 2],
-            'waiting for guest' => [RequestStatus::WaitingGuest, 60, 2],
+            'waiting for guest' => [RequestStatus::WaitingGuest, 90, 3],
             'ready' => [RequestStatus::Ready, 90, 3],
             'completed' => [RequestStatus::Completed, 100, 4],
             'cancelled' => [RequestStatus::Cancelled, 0, 0],

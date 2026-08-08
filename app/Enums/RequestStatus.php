@@ -43,8 +43,8 @@ enum RequestStatus: string
         return match ($this) {
             self::New => 10,
             self::Accepted => 30,
-            self::InProgress, self::WaitingGuest => 60,
-            self::Ready => 90,
+            self::InProgress => 60,
+            self::WaitingGuest, self::Ready => 90,
             self::Completed => 100,
             self::Cancelled => 0,
         };
@@ -55,8 +55,8 @@ enum RequestStatus: string
         return match ($this) {
             self::New, self::Cancelled => 0,
             self::Accepted => 1,
-            self::InProgress, self::WaitingGuest => 2,
-            self::Ready => 3,
+            self::InProgress => 2,
+            self::WaitingGuest, self::Ready => 3,
             self::Completed => 4,
         };
     }
