@@ -12,6 +12,6 @@
         <div class="bill-lines">@foreach($orders->where('price_minor', '>', 0) as $order)<div class="bill-line {{ $order->status === \App\Enums\RequestStatus::Cancelled ? 'cancelled' : '' }}"><span><strong>{{ $order->items->first()?->service?->localizedName() ?? $order->title }}</strong><small>{{ $order->created_at->format('d.m · H:i') }} · {{ __('guest.status.'.$order->status->value) }}</small></span><span><strong>{{ $money->format($order->price_minor, $company->currency) }}</strong>@if($money->approximateUsd($order->price_minor, $company->currency))<small>{{ $money->approximateUsd($order->price_minor, $company->currency) }}</small>@endif</span></div>@endforeach</div>
         <div class="bill-grand-total"><span><small>{{ __('guest.grand_total') }}</small><strong>{{ $money->format($total, $company->currency) }}</strong></span>@if($money->approximateUsd($total, $company->currency))<span><small>{{ __('guest.usd_estimate') }}</small><strong>{{ $money->approximateUsd($total, $company->currency) }}</strong></span>@endif</div>
     @endif
-    <div class="bill-note"><i class="bi bi-info-circle"></i><span>{{ __('guest.rate_note') }} {{ __('guest.cancelled_excluded') }}</span></div>
+    <div class="bill-note"><i class="bi bi-info-circle"></i><span>{{ __('guest.rate_note') }} {{ __('guest.cancelled_excluded') }} {{ __('guest.cash_excluded') }}</span></div>
 </section>
 @endsection

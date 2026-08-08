@@ -143,6 +143,8 @@ class GuestOrderingTest extends TestCase
         $response->assertRedirect(route('guest.orders.show', [$company, $order]));
         $this->assertSame(RequestStatus::New, $order->status);
         $this->assertSame(420000, $order->price_minor);
+        $this->assertSame('room_charge', $order->payment_method);
+        $this->assertSame('pending', $order->payment_status);
         $this->assertSame($stay->id, $order->guest_session_id);
         $this->assertDatabaseHas('service_request_items', [
             'service_request_id' => $order->id,
@@ -163,6 +165,51 @@ class GuestOrderingTest extends TestCase
             ->assertSee('Rp 420.000')
             ->assertSee('≈ $25.45');
         Event::assertDispatched(ServiceRequestChanged::class);
+    }
+
+    public function test_cash_order_is_paid_immediately_and_excluded_from_room_bill(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $owner = User::factory()->create([
+            'company_id' => $company->id,
+            'role' => UserRole::CompanyOwner,
+            'is_active' => true,
+        ]);
+        $roomService = $this->service($company, 'Breakfast charged to room', 210000);
+        $cashService = $this->service($company, 'Cash massage', 150000);
+        $stay = $this->stay($company, $room);
+        $session = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($session)->post(route('guest.orders.store', [$company, $roomService]), [
+            'quantity' => 1,
+            'payment_method' => 'room_charge',
+        ])->assertRedirect();
+
+        $this->withSession($session)->post(route('guest.orders.store', [$company, $cashService]), [
+            'quantity' => 1,
+            'payment_method' => 'cash',
+        ])->assertRedirect();
+
+        $roomOrder = ServiceRequest::where('title', 'Breakfast charged to room')->firstOrFail();
+        $cashOrder = ServiceRequest::where('title', 'Cash massage')->firstOrFail();
+        $this->assertSame('pending', $roomOrder->payment_status);
+        $this->assertSame('paid', $cashOrder->payment_status);
+
+        $this->withSession($session)->get(route('guest.orders.show', [$company, $cashOrder]))
+            ->assertOk()
+            ->assertSee('Оплачено сразу');
+
+        $this->withSession($session)->get(route('guest.bill', $company))
+            ->assertOk()
+            ->assertSee('Breakfast charged to room')
+            ->assertSee('Rp 210.000')
+            ->assertDontSee('Cash massage')
+            ->assertDontSee('Rp 150.000');
+
+        $this->actingAs($owner)->get(route('workspace.stays.index'))
+            ->assertOk()
+            ->assertSee('Rp 210.000')
+            ->assertDontSee('Rp 150.000');
     }
 
     public function test_guest_can_switch_to_arabic_with_rtl_and_localized_service(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guest;
 
 use App\Actions\CreateGuestOrder;
+use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\GuestSession;
@@ -62,8 +63,12 @@ class OrderController extends Controller
     {
         /** @var GuestSession $stay */
         $stay = app('guestStay');
-        $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)->with('items.service')->oldest()->get();
-        $total = (int) $orders->reject(fn (ServiceRequest $order) => $order->status === \App\Enums\RequestStatus::Cancelled)->sum('price_minor');
+        $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)
+            ->where('payment_method', 'room_charge')
+            ->with('items.service')
+            ->oldest()
+            ->get();
+        $total = (int) $orders->reject(fn (ServiceRequest $order) => $order->status === RequestStatus::Cancelled)->sum('price_minor');
 
         return view('guest.bill', compact('company', 'stay', 'orders', 'total'));
     }

@@ -36,7 +36,11 @@ class CreateGuestOrder
                 'priority' => RequestPriority::Normal,
                 'price_minor' => $total,
                 'payment_method' => $total > 0 ? $paymentMethod : null,
-                'payment_status' => $total > 0 ? 'pending' : 'not_required',
+                'payment_status' => match (true) {
+                    $total === 0 => 'not_required',
+                    $paymentMethod === 'cash' => 'paid',
+                    default => 'pending',
+                },
                 'due_at' => now()->addMinutes(max($service->sla_minutes ?? 30, 10)),
             ]);
 
