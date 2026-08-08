@@ -553,6 +553,7 @@ a { text-decoration: none; }
 .payment-caption span { display:flex; flex-direction:column; }
 .payment-caption small { color:var(--guest-muted); font-size:8px; }
 .payment-caption strong { font-size:10px; }
+.guest-timeline { border-top:1px solid #eceeea; padding-top:18px; }
 .guest-timeline-row { display:flex; gap:13px; min-height:60px; position:relative; }
 .guest-timeline-row::before { border-left:1px solid #d9e0dc; bottom:0; content:''; left:5px; position:absolute; top:10px; }
 .guest-timeline-row:last-child::before { display:none; }
