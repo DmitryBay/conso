@@ -158,14 +158,22 @@ class GuestOrderingTest extends TestCase
             ->assertOk()
             ->assertSee('Balinese breakfast')
             ->assertSee('Ход выполнения')
+            ->assertSee('Прогресс работы')
+            ->assertSee('10% выполнено')
+            ->assertSee('data-progress="10"', false)
             ->assertSee('Заказ создан гостем через каталог')
             ->assertDontSee('workspace.history_guest')
             ->assertSee('Звонки временно недоступны')
             ->assertDontSee('Свяжитесь со стойкой регистрации по телефону в номере.');
         $this->get(route('guest.orders.show', [$company, $order]).'?lang=en')
             ->assertOk()
+            ->assertSee('10% complete')
             ->assertSee('Order created by the guest from the catalog')
             ->assertDontSee('workspace.history_guest');
+        $this->get(route('guest.orders.index', $company).'?lang=ru')
+            ->assertOk()
+            ->assertSee('10% выполнено')
+            ->assertSee('data-progress="10"', false);
         $this->get(route('guest.bill', $company).'?lang=ru')
             ->assertOk()
             ->assertSee('Начислений на номер пока нет')
@@ -184,6 +192,8 @@ class GuestOrderingTest extends TestCase
 
         $this->withSession($session)->get(route('guest.orders.show', [$company, $order]))
             ->assertOk()
+            ->assertSee('90% выполнено')
+            ->assertSee('data-progress="90"', false)
             ->assertSee('Подтвердите получение')
             ->assertSee('Подтвердить и завершить');
 
@@ -201,6 +211,10 @@ class GuestOrderingTest extends TestCase
             'note' => 'workspace.history_guest_confirmed',
         ]);
         $this->assertSame(2, $owner->notifications()->count());
+        $this->withSession($session)->get(route('guest.orders.show', [$company, $order]))
+            ->assertOk()
+            ->assertSee('100% выполнено')
+            ->assertSee('data-progress="100"', false);
         $this->withSession($session)->get(route('guest.bill', $company))
             ->assertOk()
             ->assertSee('Rp 420.000')
