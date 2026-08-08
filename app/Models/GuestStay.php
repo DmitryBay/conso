@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'public_id', 'company_id', 'room_id', 'guest_name', 'check_in_at', 'check_out_at',
+    'public_id', 'company_id', 'room_id', 'guest_name', 'guest_email', 'check_in_at', 'check_out_at',
     'nights', 'access_pin_hash', 'access_pin', 'status', 'checked_out_at',
 ])]
 class GuestStay extends Model
@@ -52,5 +52,15 @@ class GuestStay extends Model
             && ! $this->checked_out_at
             && $this->check_in_at->lte(now())
             && $this->check_out_at->isFuture();
+    }
+
+    public function revokeSessions(): void
+    {
+        $this->sessions()->each(function (GuestSession $session): void {
+            $session->pushSubscriptions()->delete();
+            if (! $session->revoked_at) {
+                $session->update(['revoked_at' => now()]);
+            }
+        });
     }
 }

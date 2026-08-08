@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'open_in_maps'=>'Google 지도에서 보기','maps_hint'=>'새 창에서 열립니다',
+    'open_in_maps' => 'Google 지도에서 보기', 'maps_hint' => '새 창에서 열립니다',
     'language' => '언어', 'hotel' => '호텔', 'room' => '객실', 'services' => '서비스', 'orders' => '요청', 'bill' => '청구서', 'logout' => '로그아웃',
     'country' => '국가', 'other_countries' => '기타 국가 및 언어', 'countries' => ['INT' => '기타 국가', 'ID' => '인도네시아', 'RU' => '러시아', 'UA' => '우크라이나', 'AE' => '아랍에미리트', 'IL' => '이스라엘', 'CN' => '중국', 'KR' => '대한민국'],
     'welcome_to' => '환영합니다', 'access_intro' => '편안한 투숙에 필요한 모든 서비스를 기기에서 이용하세요.', 'guest_service' => '투숙객 서비스', 'access_title' => '객실 정보를 입력하세요', 'access_hint' => 'PIN은 객실 카드 또는 리셉션에서 확인할 수 있습니다.', 'room_number' => '객실 번호', 'room_example' => '예: 305', 'pin' => 'PIN 코드', 'pin_hint' => '숫자 4자리', 'your_name' => '이름', 'optional' => '선택 사항', 'name_hint' => '어떻게 불러드릴까요?', 'continue' => '계속', 'secure_access' => '투숙 기간에만 유효한 안전한 접속입니다',
@@ -20,5 +20,9 @@ return [
     'current_status' => '현재 상태', 'status_title' => '요청 상태', 'team_received' => '호텔 팀이 요청을 받았습니다.', 'accepted_hint' => '직원이 요청을 수락했으며 곧 시작합니다.', 'progress_hint' => '요청을 처리하고 있습니다.', 'waiting_hint' => '호텔 팀에 추가 정보가 필요합니다.', 'completed_hint' => '완료되었습니다! 만족하셨기를 바랍니다.', 'cancelled_hint' => '요청이 취소되었습니다. 자세한 내용은 리셉션에 문의하세요.', 'order_contents' => '요청 내용', 'created_at' => ':date 생성', 'progress' => '처리 과정', 'updated_by_team' => '호텔 팀 업데이트', 'created_via_catalog' => '카탈로그에서 생성된 요청', 'need_help' => '도움이 필요하신가요?', 'help_hint' => '객실 전화로 리셉션에 연락해 주세요.',
     'status' => ['new' => '신규', 'accepted' => '접수됨', 'in_progress' => '처리 중', 'waiting_guest' => '투숙객 대기', 'completed' => '완료', 'cancelled' => '취소'],
     'calls_unavailable_title' => '통화 기능을 잠시 사용할 수 없습니다', 'calls_unavailable' => '해당 기능을 준비 중입니다. 현재는 리셉션으로 문의해 주세요.', 'back_to_services' => '서비스로 돌아가기',
+    'email' => '이메일', 'email_hint' => 'you@example.com', 'email_notification_hint' => '이메일을 입력하면 요청 상태 변경을 받을 수 있습니다.',
+    'notifications' => '알림', 'notification_eyebrow' => '요청 업데이트', 'push_title' => '푸시 알림', 'push_checking' => '기기 확인 중…', 'push_enabled' => '이 투숙에 푸시가 켜져 있습니다.', 'push_disabled' => '푸시가 아직 꺼져 있습니다.', 'push_enable' => '켜기', 'push_disable' => '끄기', 'push_unsupported' => '사이트를 홈 화면에 추가한 후 앱으로 열어 주세요.', 'push_denied' => '기기 설정에서 알림이 차단되어 있습니다.', 'push_error' => '푸시 설정을 업데이트할 수 없습니다.',
+    'email_notifications' => '이메일 알림', 'save_email' => '이메일 저장', 'notification_email_saved' => '알림 이메일이 저장되었습니다.', 'notification_expiry_hint' => ':date 체크아웃 후 알림이 자동으로 중지됩니다.',
+    'notification_status_title' => '요청: :status', 'notification_status_body' => ':room호실의 “:request” 요청이 “:status” 상태로 변경되었습니다.', 'notification_email_greeting' => '안녕하세요, :name님!', 'notification_open_request' => '요청 열기', 'notification_email_footer' => '투숙 기간 중 :company에서 보낸 자동 알림입니다.',
     'invalid_access' => '객실 번호 또는 PIN이 일치하지 않습니다.', 'invalid_stay_access' => '객실과 PIN에 맞는 유효한 투숙이 없습니다.', 'stay_until' => '까지', 'too_many_attempts' => '시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.', 'access_required' => '객실 번호와 PIN을 입력하세요.',
 ];

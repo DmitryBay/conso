@@ -29,6 +29,9 @@
         <div class="guest-input-wrap"><i class="bi bi-shield-lock"></i><input id="pin" name="pin" type="password" inputmode="numeric" placeholder="{{ __('guest.pin_hint') }}" maxlength="10" required></div>
         <label class="guest-label" for="guest_name">{{ __('guest.your_name') }} <small>{{ __('guest.optional') }}</small></label>
         <div class="guest-input-wrap"><i class="bi bi-person"></i><input id="guest_name" name="guest_name" value="{{ old('guest_name') }}" placeholder="{{ __('guest.name_hint') }}"></div>
+        <label class="guest-label" for="guest_email">{{ __('guest.email') }} <small>{{ __('guest.optional') }}</small></label>
+        <div class="guest-input-wrap"><i class="bi bi-envelope"></i><input id="guest_email" name="guest_email" type="email" value="{{ old('guest_email') }}" placeholder="{{ __('guest.email_hint') }}" autocomplete="email"></div>
+        <small class="guest-field-hint">{{ __('guest.email_notification_hint') }}</small>
         <button class="guest-primary-button" type="submit">{{ __('guest.continue') }} <i class="bi bi-arrow-right"></i></button>
         <div class="guest-secure-note"><i class="bi bi-lock"></i> {{ __('guest.secure_access') }}</div>
     </form>

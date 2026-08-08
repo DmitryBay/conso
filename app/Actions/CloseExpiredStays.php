@@ -21,7 +21,7 @@ class CloseExpiredStays
                             'status' => GuestStayStatus::CheckedOut,
                             'checked_out_at' => $stay->check_out_at,
                         ]);
-                        $stay->sessions()->whereNull('revoked_at')->update(['revoked_at' => now()]);
+                        $stay->revokeSessions();
                     });
                     $count++;
                 }

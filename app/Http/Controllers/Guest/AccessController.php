@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Guest;
 
 use App\Enums\CompanyStatus;
+use App\Enums\GuestStayStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\GuestStay;
 use App\Models\Room;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -81,17 +82,18 @@ class AccessController extends Controller
             'room_number' => ['required', 'string', 'max:30'],
             'pin' => ['required', 'string', 'min:4', 'max:10'],
             'guest_name' => ['nullable', 'string', 'max:160'],
+            'guest_email' => ['nullable', 'email:rfc', 'max:255'],
             'country_code' => ['required', 'string', Rule::in(array_keys(self::COUNTRY_LOCALES))],
         ]);
         $key = 'guest-access:'.$company->id.':'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return back()->withInput($request->only('room_number', 'guest_name', 'country_code'))->with('guest_error', __('guest.too_many_attempts'));
+            return back()->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))->with('guest_error', __('guest.too_many_attempts'));
         }
 
         $room = Room::where('company_id', $company->id)->where('number', trim($data['room_number']))->where('is_active', true)->first();
         $stay = $room ? GuestStay::where('company_id', $company->id)
             ->where('room_id', $room->id)
-            ->whereIn('status', [\App\Enums\GuestStayStatus::Upcoming, \App\Enums\GuestStayStatus::CheckedIn])
+            ->whereIn('status', [GuestStayStatus::Upcoming, GuestStayStatus::CheckedIn])
             ->where('check_in_at', '<=', now())
             ->where('check_out_at', '>', now())
             ->latest('check_in_at')
@@ -100,15 +102,18 @@ class AccessController extends Controller
         if (! $room || ! $stay || ! Hash::check($data['pin'], $stay->access_pin_hash)) {
             RateLimiter::hit($key, 60);
 
-            return back()->withInput($request->only('room_number', 'guest_name', 'country_code'))->with('guest_error', __('guest.invalid_stay_access'));
+            return back()->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))->with('guest_error', __('guest.invalid_stay_access'));
         }
 
         RateLimiter::clear($key);
-        if ($stay->status === \App\Enums\GuestStayStatus::Upcoming) {
-            $stay->update(['status' => \App\Enums\GuestStayStatus::CheckedIn]);
+        if ($stay->status === GuestStayStatus::Upcoming) {
+            $stay->update(['status' => GuestStayStatus::CheckedIn]);
         }
         if (! $stay->guest_name && $data['guest_name']) {
             $stay->update(['guest_name' => $data['guest_name']]);
+        }
+        if (filled($data['guest_email'] ?? null)) {
+            $stay->update(['guest_email' => $data['guest_email']]);
         }
 
         $locale = self::COUNTRY_LOCALES[$data['country_code']];
@@ -133,7 +138,10 @@ class AccessController extends Controller
     public function destroy(Request $request, Company $company): RedirectResponse
     {
         $stay = $this->currentStay($request, $company);
-        $stay?->update(['revoked_at' => now()]);
+        if ($stay) {
+            $stay->pushSubscriptions()->delete();
+            $stay->update(['revoked_at' => now()]);
+        }
         $request->session()->forget('guest_session.'.$company->id);
 
         return redirect()->route('guest.access', $company);

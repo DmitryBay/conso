@@ -71,6 +71,8 @@ if (pushSettings) {
     const publicKey = document.querySelector('meta[name="webpush-public-key"]')?.content;
     const storeUrl = document.querySelector('meta[name="webpush-store-url"]')?.content;
     const testUrl = document.querySelector('meta[name="webpush-test-url"]')?.content;
+    const serviceWorkerUrl = document.querySelector('meta[name="webpush-service-worker"]')?.content || '/workspace-sw.js';
+    const serviceWorkerScope = document.querySelector('meta[name="webpush-scope"]')?.content || '/workspace/';
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     const toggleButton = document.getElementById('pushToggleButton');
     const testButton = document.getElementById('pushTestButton');
@@ -101,7 +103,7 @@ if (pushSettings) {
         toggleButton.querySelector('span').textContent = pushSettings.dataset[enabled ? 'disable' : 'enable'];
         toggleButton.classList.toggle('btn-primary', !enabled);
         toggleButton.classList.toggle('btn-light', enabled);
-        testButton.hidden = !enabled;
+        if (testButton) testButton.hidden = !enabled;
     };
 
     const initializePush = async () => {
@@ -111,7 +113,7 @@ if (pushSettings) {
             return;
         }
 
-        registration = await navigator.serviceWorker.register('/workspace-sw.js', { scope: '/workspace/' });
+        registration = await navigator.serviceWorker.register(serviceWorkerUrl, { scope: serviceWorkerScope });
         await navigator.serviceWorker.ready;
         subscription = await registration.pushManager.getSubscription();
         if (Notification.permission === 'denied') {
@@ -154,7 +156,7 @@ if (pushSettings) {
         }
     });
 
-    testButton.addEventListener('click', async () => {
+    testButton?.addEventListener('click', async () => {
         testButton.disabled = true;
         try {
             await request(testUrl, 'POST');

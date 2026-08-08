@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use NotificationChannels\WebPush\PushSubscription;
 use Tests\TestCase;
 
 class GuestStayManagementTest extends TestCase
@@ -48,10 +49,18 @@ class GuestStayManagementTest extends TestCase
         ])->assertRedirect(route('guest.catalog', $company));
         $session = GuestSession::firstOrFail();
         $this->assertSame($stay->id, $session->guest_stay_id);
+        $session->updatePushSubscription(
+            'https://push.example.test/subscriptions/checkout-device',
+            Str::random(87),
+            Str::random(22),
+            'aes128gcm',
+        );
+        $this->assertSame(1, PushSubscription::count());
 
         $this->actingAs($manager)->patch(route('workspace.stays.checkout', $stay))->assertRedirect();
         $this->assertSame(GuestStayStatus::CheckedOut, $stay->fresh()->status);
         $this->assertNotNull($session->fresh()->revoked_at);
+        $this->assertSame(0, PushSubscription::count());
         $this->get(route('guest.catalog', $company))->assertRedirect(route('guest.access', $company));
     }
 

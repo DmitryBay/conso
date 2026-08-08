@@ -99,7 +99,7 @@ class GuestStayController extends Controller
 
         DB::transaction(function () use ($guestStay): void {
             $guestStay->update(['status' => GuestStayStatus::CheckedOut, 'checked_out_at' => now()]);
-            $guestStay->sessions()->whereNull('revoked_at')->update(['revoked_at' => now()]);
+            $guestStay->revokeSessions();
         });
 
         return back()->with('success', __('workspace.stay_checked_out'));
@@ -118,7 +118,7 @@ class GuestStayController extends Controller
                 'access_pin_hash' => Hash::make($pin),
                 'access_pin' => $pin,
             ]);
-            $guestStay->sessions()->whereNull('revoked_at')->update(['revoked_at' => now()]);
+            $guestStay->revokeSessions();
         });
 
         return back()->with('success', __('workspace.pin_updated'))

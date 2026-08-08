@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="{{ $company->name }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php($hasStay = app()->bound('guestStay'))
-    @if($hasStay)<meta name="guest-session-status-url" content="{{ route('guest.session.status', $company) }}"><meta name="guest-access-url" content="{{ route('guest.access', $company) }}">@endif
+    @if($hasStay)<meta name="guest-session-status-url" content="{{ route('guest.session.status', $company) }}"><meta name="guest-access-url" content="{{ route('guest.access', $company) }}"><meta name="webpush-public-key" content="{{ config('webpush.vapid.public_key') }}"><meta name="webpush-store-url" content="{{ route('guest.push-subscriptions.store', $company) }}"><meta name="webpush-service-worker" content="/guest-sw.js"><meta name="webpush-scope" content="/guest/">@endif
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('app-icons/luma-180.png') }}">
     <link rel="manifest" href="{{ route('guest.manifest', $company) }}">
@@ -26,7 +26,7 @@
         </a>
         <div class="guest-header-actions">
             <div class="dropdown guest-language"><button class="guest-language-button" data-bs-toggle="dropdown" aria-label="{{ __('guest.language') }}"><i class="bi bi-translate"></i><span>{{ mb_strtoupper(app()->getLocale()) }}</span></button><div class="dropdown-menu dropdown-menu-end">@foreach(['ru'=>'Русский','uk'=>'Українська','id'=>'Bahasa Indonesia','en'=>'English','ar'=>'العربية','he'=>'עברית','zh'=>'中文','ko'=>'한국어'] as $code=>$label)<a class="dropdown-item {{ app()->getLocale()===$code ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['lang'=>$code]) }}"><span>{{ $label }}</span><small>{{ mb_strtoupper($code) }}</small></a>@endforeach</div></div>
-            @if($hasStay)<div class="guest-stay-meta"><div class="guest-room"><small>{{ __('guest.room') }}</small><strong>{{ app('guestStay')->room->number }}</strong></div><div class="guest-stay-until"><small>{{ __('guest.stay_until') }}</small><strong>{{ app('guestStay')->stay->check_out_at->setTimezone($company->timezone)->format('d.m') }}</strong></div></div><form class="guest-logout-form" method="POST" action="{{ route('guest.logout', $company) }}">@csrf<button class="guest-logout-button" type="submit" title="{{ __('guest.logout') }}" aria-label="{{ __('guest.logout') }}"><i class="bi bi-box-arrow-right"></i><span>{{ __('guest.logout') }}</span></button></form>@endif
+            @if($hasStay)<button class="guest-notification-button" type="button" data-bs-toggle="modal" data-bs-target="#guestNotificationModal" title="{{ __('guest.notifications') }}" aria-label="{{ __('guest.notifications') }}"><i class="bi bi-bell"></i></button><div class="guest-stay-meta"><div class="guest-room"><small>{{ __('guest.room') }}</small><strong>{{ app('guestStay')->room->number }}</strong></div><div class="guest-stay-until"><small>{{ __('guest.stay_until') }}</small><strong>{{ app('guestStay')->stay->check_out_at->setTimezone($company->timezone)->format('d.m') }}</strong></div></div><form class="guest-logout-form" method="POST" action="{{ route('guest.logout', $company) }}">@csrf<button class="guest-logout-button" type="submit" title="{{ __('guest.logout') }}" aria-label="{{ __('guest.logout') }}"><i class="bi bi-box-arrow-right"></i><span>{{ __('guest.logout') }}</span></button></form>@endif
         </div>
     </header>
 
@@ -49,6 +49,14 @@
             <a class="{{ request()->routeIs('guest.orders.index') || request()->routeIs('guest.orders.show') ? 'active' : '' }}" href="{{ route('guest.orders.index', $company) }}"><i class="bi bi-bell"></i><span>{{ __('guest.orders') }}</span></a>
             <a class="{{ request()->routeIs('guest.bill') ? 'active' : '' }}" href="{{ route('guest.bill', $company) }}"><i class="bi bi-receipt"></i><span>{{ __('guest.bill') }}</span></a>
         </nav>
+        <div class="modal fade guest-notification-modal" id="guestNotificationModal" tabindex="-1" aria-labelledby="guestNotificationTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+            <div class="modal-header"><span class="guest-notification-modal-icon"><i class="bi bi-bell"></i></span><div><small>{{ __('guest.notification_eyebrow') }}</small><h2 class="modal-title" id="guestNotificationTitle">{{ __('guest.notifications') }}</h2></div><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="{{ __('guest.close') }}"></button></div>
+            <div class="modal-body">
+                <section class="guest-notification-option" id="pushSettings" data-enabled="{{ __('guest.push_enabled') }}" data-disabled="{{ __('guest.push_disabled') }}" data-enable="{{ __('guest.push_enable') }}" data-disable="{{ __('guest.push_disable') }}" data-unsupported="{{ __('guest.push_unsupported') }}" data-denied="{{ __('guest.push_denied') }}" data-error="{{ __('guest.push_error') }}"><span><i class="bi bi-phone-vibrate"></i></span><div><strong>{{ __('guest.push_title') }}</strong><small id="pushStatus">{{ __('guest.push_checking') }}</small></div><button class="btn btn-primary" id="pushToggleButton" type="button"><span>{{ __('guest.push_enable') }}</span></button></section>
+                <form class="guest-notification-email" method="POST" action="{{ route('guest.notifications.email', $company) }}">@csrf @method('PATCH')<label class="guest-label" for="notification_email">{{ __('guest.email_notifications') }}</label><div class="guest-input-wrap"><i class="bi bi-envelope"></i><input id="notification_email" name="guest_email" type="email" value="{{ app('guestStay')->stay->guest_email }}" placeholder="{{ __('guest.email_hint') }}" autocomplete="email"></div><small>{{ __('guest.email_notification_hint') }}</small><button class="guest-guide-close" type="submit">{{ __('guest.save_email') }}</button></form>
+                <p class="guest-notification-expiry"><i class="bi bi-shield-check"></i> {{ __('guest.notification_expiry_hint', ['date' => app('guestStay')->stay->check_out_at->setTimezone($company->timezone)->format('d.m.Y')]) }}</p>
+            </div>
+        </div></div></div>
     @endif
 </div>
 @stack('scripts')

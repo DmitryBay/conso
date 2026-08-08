@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'open_in_maps'=>'Google 地图地点','maps_hint'=>'将在新窗口打开',
+    'open_in_maps' => 'Google 地图地点', 'maps_hint' => '将在新窗口打开',
     'language' => '语言', 'hotel' => '您的酒店', 'room' => '房间', 'services' => '服务', 'orders' => '订单', 'bill' => '账单', 'logout' => '退出',
     'country' => '您的国家', 'other_countries' => '其他国家和语言', 'countries' => ['INT' => '其他国家', 'ID' => '印度尼西亚', 'RU' => '俄罗斯', 'UA' => '乌克兰', 'AE' => '阿联酋', 'IL' => '以色列', 'CN' => '中国', 'KR' => '韩国'],
     'welcome_to' => '欢迎来到', 'access_intro' => '舒适住宿所需的一切，尽在您的设备中。', 'guest_service' => '宾客服务', 'access_title' => '请输入房间信息', 'access_hint' => 'PIN 码位于房内卡片上，也可向前台索取。', 'room_number' => '房间号', 'room_example' => '例如：305', 'pin' => 'PIN 码', 'pin_hint' => '4 位数字', 'your_name' => '您的姓名', 'optional' => '可选', 'name_hint' => '我们该如何称呼您？', 'continue' => '继续', 'secure_access' => '安全访问，仅在入住期间有效',
@@ -20,5 +20,9 @@ return [
     'current_status' => '当前状态', 'status_title' => '请求状态', 'team_received' => '酒店团队已收到您的请求。', 'accepted_hint' => '工作人员已接单，将很快开始处理。', 'progress_hint' => '您的请求正在处理中。', 'waiting_hint' => '工作人员需要您的补充信息。', 'completed_hint' => '已完成！希望一切令您满意。', 'cancelled_hint' => '此请求已取消，请联系前台了解详情。', 'order_contents' => '请求详情', 'created_at' => '创建于 :date', 'progress' => '处理进度', 'updated_by_team' => '由酒店团队更新', 'created_via_catalog' => '通过服务目录创建', 'need_help' => '需要帮助？', 'help_hint' => '请使用客房电话联系前台。',
     'status' => ['new' => '新请求', 'accepted' => '已接受', 'in_progress' => '处理中', 'waiting_guest' => '等待宾客', 'completed' => '已完成', 'cancelled' => '已取消'],
     'calls_unavailable_title' => '通话功能暂时不可用', 'calls_unavailable' => '我们正在完善此功能。目前请联系前台。', 'back_to_services' => '返回服务',
+    'email' => '电子邮箱', 'email_hint' => 'you@example.com', 'email_notification_hint' => '填写邮箱后，我们会将请求状态更新发送至该邮箱。',
+    'notifications' => '通知', 'notification_eyebrow' => '请求更新', 'push_title' => '推送通知', 'push_checking' => '正在检查设备…', 'push_enabled' => '本次入住已开启推送。', 'push_disabled' => '尚未开启推送。', 'push_enable' => '开启', 'push_disable' => '关闭', 'push_unsupported' => '请将网站添加到主屏幕，并作为 App 打开。', 'push_denied' => '设备设置中已禁用通知。', 'push_error' => '无法更新推送设置。',
+    'email_notifications' => '邮件通知', 'save_email' => '保存邮箱', 'notification_email_saved' => '通知邮箱已保存。', 'notification_expiry_hint' => '通知将在 :date 退房后自动停止。',
+    'notification_status_title' => '请求：:status', 'notification_status_body' => ':room 房的“:request”请求现已变更为“:status”。', 'notification_email_greeting' => '您好，:name！', 'notification_open_request' => '打开请求', 'notification_email_footer' => '这是您入住期间由 :company 发送的自动通知。',
     'invalid_access' => '房间号或 PIN 码不正确。', 'invalid_stay_access' => '没有与该房间和 PIN 匹配的有效住宿。', 'stay_until' => '至', 'too_many_attempts' => '尝试次数过多，请一分钟后重试。', 'access_required' => '请输入房间号和 PIN 码。',
 ];

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'open_in_maps'=>'الأماكن على خرائط Google','maps_hint'=>'يفتح في نافذة جديدة',
+    'open_in_maps' => 'الأماكن على خرائط Google', 'maps_hint' => 'يفتح في نافذة جديدة',
     'language' => 'اللغة', 'hotel' => 'فندقك', 'room' => 'الغرفة', 'services' => 'الخدمات', 'orders' => 'الطلبات', 'bill' => 'الفاتورة', 'logout' => 'تسجيل الخروج',
     'country' => 'بلدك', 'other_countries' => 'بلدان ولغات أخرى', 'countries' => ['INT' => 'بلدان أخرى', 'ID' => 'إندونيسيا', 'RU' => 'روسيا', 'UA' => 'أوكرانيا', 'AE' => 'الإمارات', 'IL' => 'إسرائيل', 'CN' => 'الصين', 'KR' => 'كوريا الجنوبية'],
     'welcome_to' => 'مرحباً بكم في', 'access_intro' => 'كل ما تحتاجه لإقامة مريحة مباشرة من جهازك.', 'guest_service' => 'خدمات النزلاء', 'access_title' => 'أدخل بيانات غرفتك', 'access_hint' => 'رمز PIN موجود على البطاقة في الغرفة أو لدى الاستقبال.', 'room_number' => 'رقم الغرفة', 'room_example' => 'مثال: 305', 'pin' => 'رمز PIN', 'pin_hint' => '4 أرقام', 'your_name' => 'اسمك', 'optional' => 'اختياري', 'name_hint' => 'كيف يمكننا مناداتك؟', 'continue' => 'متابعة', 'secure_access' => 'دخول آمن وصالح فقط خلال إقامتك',
@@ -20,5 +20,9 @@ return [
     'current_status' => 'الحالة الحالية', 'status_title' => 'حالة الطلب', 'team_received' => 'استلم فريق الفندق طلبك.', 'accepted_hint' => 'تم قبول الطلب وسيبدأ الموظف قريباً.', 'progress_hint' => 'طلبك قيد التنفيذ الآن.', 'waiting_hint' => 'يحتاج الفريق إلى توضيح منك.', 'completed_hint' => 'تم! نأمل أن يكون كل شيء مثالياً.', 'cancelled_hint' => 'تم إلغاء الطلب. يرجى التواصل مع الاستقبال.', 'order_contents' => 'تفاصيل الطلب', 'created_at' => 'تم الإنشاء :date', 'progress' => 'سير التنفيذ', 'updated_by_team' => 'يحدثه فريق الفندق', 'created_via_catalog' => 'تم إنشاء الطلب من الدليل', 'need_help' => 'تحتاج مساعدة؟', 'help_hint' => 'اتصل بالاستقبال من هاتف الغرفة.',
     'status' => ['new' => 'جديد', 'accepted' => 'مقبول', 'in_progress' => 'قيد التنفيذ', 'waiting_guest' => 'بانتظار النزيل', 'completed' => 'مكتمل', 'cancelled' => 'ملغى'],
     'calls_unavailable_title' => 'المكالمات غير متاحة مؤقتًا', 'calls_unavailable' => 'نحن نعمل على هذه الميزة. يرجى التواصل مع الاستقبال في الوقت الحالي.', 'back_to_services' => 'العودة إلى الخدمات',
+    'email' => 'البريد الإلكتروني', 'email_hint' => 'you@example.com', 'email_notification_hint' => 'عند إضافة بريدك، سنرسل إليه تحديثات حالة الطلب.',
+    'notifications' => 'الإشعارات', 'notification_eyebrow' => 'تحديثات الطلبات', 'push_title' => 'إشعارات Push', 'push_checking' => 'جاري فحص الجهاز…', 'push_enabled' => 'تم تفعيل Push لهذه الإقامة.', 'push_disabled' => 'لم يتم تفعيل Push بعد.', 'push_enable' => 'تفعيل', 'push_disable' => 'إيقاف', 'push_unsupported' => 'أضف الموقع إلى الشاشة الرئيسية وافتحه كتطبيق.', 'push_denied' => 'الإشعارات محظورة في إعدادات الجهاز.', 'push_error' => 'تعذر تحديث إعدادات Push.',
+    'email_notifications' => 'إشعارات البريد', 'save_email' => 'حفظ البريد', 'notification_email_saved' => 'تم حفظ بريد الإشعارات.', 'notification_expiry_hint' => 'ستتوقف الإشعارات تلقائيًا بعد تسجيل المغادرة في :date.',
+    'notification_status_title' => 'الطلب: :status', 'notification_status_body' => 'أصبحت حالة طلب «:request» للغرفة :room «:status».', 'notification_email_greeting' => 'مرحبًا، :name!', 'notification_open_request' => 'فتح الطلب', 'notification_email_footer' => 'هذا إشعار تلقائي من :company أثناء إقامتك.',
     'invalid_access' => 'رقم الغرفة أو رمز PIN غير صحيح.', 'invalid_stay_access' => 'لا توجد إقامة نشطة تطابق الغرفة ورمز PIN.', 'stay_until' => 'حتى', 'too_many_attempts' => 'محاولات كثيرة. حاول مرة أخرى بعد دقيقة.', 'access_required' => 'أدخل رقم الغرفة ورمز PIN للمتابعة.',
 ];

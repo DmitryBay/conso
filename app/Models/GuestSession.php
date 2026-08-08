@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable(['public_id', 'company_id', 'guest_stay_id', 'room_id', 'guest_name', 'locale', 'country_code', 'expires_at', 'last_seen_at', 'revoked_at'])]
 class GuestSession extends Model
 {
+    use HasPushSubscriptions, Notifiable;
+
     protected function casts(): array
     {
         return [
@@ -45,5 +49,10 @@ class GuestSession extends Model
             && $this->expires_at->isFuture()
             && $this->room->is_active
             && $this->stay?->isActive();
+    }
+
+    public function routeNotificationForMail(): ?string
+    {
+        return $this->stay?->guest_email;
     }
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ImpersonationController;
 use App\Http\Controllers\Guest\AccessController as GuestAccessController;
 use App\Http\Controllers\Guest\CatalogController as GuestCatalogController;
+use App\Http\Controllers\Guest\NotificationPreferenceController as GuestNotificationPreferenceController;
 use App\Http\Controllers\Guest\OrderController as GuestOrderController;
 use App\Http\Controllers\Workspace\BackgroundLibraryController;
 use App\Http\Controllers\Workspace\DashboardController as WorkspaceDashboardController;
@@ -52,6 +53,9 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
         Route::get('orders', [GuestOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{serviceRequest}', [GuestOrderController::class, 'show'])->name('orders.show');
         Route::get('bill', [GuestOrderController::class, 'bill'])->name('bill');
+        Route::post('push-subscriptions', [GuestNotificationPreferenceController::class, 'storePush'])->name('push-subscriptions.store');
+        Route::delete('push-subscriptions', [GuestNotificationPreferenceController::class, 'destroyPush'])->name('push-subscriptions.destroy');
+        Route::patch('notifications/email', [GuestNotificationPreferenceController::class, 'updateEmail'])->name('notifications.email');
     });
 });
 

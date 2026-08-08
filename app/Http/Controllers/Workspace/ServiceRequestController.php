@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Notifications\GuestRequestStatusNotification;
 use App\Notifications\WorkspaceNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -119,6 +120,7 @@ class ServiceRequestController extends Controller
             'actor' => $request->user()->name,
             'room' => $serviceRequest->room_number,
         ]);
+        $this->notifyGuest($serviceRequest);
         ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'taken');
 
         return $this->response($request, __('workspace.request_assigned'));
@@ -156,6 +158,9 @@ class ServiceRequestController extends Controller
             'room' => $serviceRequest->room_number,
             'status' => $to->value,
         ]);
+        if ($from !== $to) {
+            $this->notifyGuest($serviceRequest);
+        }
         ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'status_changed');
 
         return $this->response($request, __('workspace.request_updated'));
@@ -189,6 +194,24 @@ class ServiceRequestController extends Controller
                 'email' => true,
                 'push' => true,
             ]));
+    }
+
+    private function notifyGuest(ServiceRequest $item): void
+    {
+        if (! $item->guest_stay_id) {
+            return;
+        }
+
+        $item->loadMissing(['company', 'service', 'guestStay.sessions.stay']);
+        $sessions = $item->guestStay->sessions
+            ->whereNull('revoked_at')
+            ->filter(fn ($session) => $session->expires_at?->isFuture())
+            ->values();
+        $emailSession = $sessions->firstWhere('id', $item->guest_session_id) ?? $sessions->first();
+
+        foreach ($sessions as $session) {
+            $session->notify(new GuestRequestStatusNotification($item, $session->is($emailSession)));
+        }
     }
 
     private function moneyToMinor(mixed $value, string $currency): ?int
