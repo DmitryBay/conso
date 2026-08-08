@@ -489,6 +489,7 @@ a { text-decoration: none; }
 .order-card-copy h2 { font-size:13px; font-weight:740; margin:5px 0 3px; }
 .order-card-copy p { color:var(--guest-muted); font-size:9px; margin:0; }
 .order-progress { margin-top:11px; max-width:340px; }
+.order-card-copy > .order-progress { display:block; gap:0; width:100%; }
 .order-progress-copy { align-items:center; color:var(--guest-muted); display:flex; font-size:8px; gap:8px; justify-content:space-between; margin-bottom:5px; }
 .order-progress-copy > span { text-transform:uppercase; }
 .order-progress-copy > strong { color:#4e5754; font-size:9px; text-align:end; }
