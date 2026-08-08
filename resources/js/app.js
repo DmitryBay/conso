@@ -11,7 +11,6 @@ if (guestKiosk) {
         || window.navigator.standalone === true;
 
     document.documentElement.classList.toggle('pwa-standalone', standalone);
-    document.addEventListener('contextmenu', event => event.preventDefault());
     document.addEventListener('dragstart', event => event.preventDefault());
     document.addEventListener('gesturestart', event => event.preventDefault());
 }
