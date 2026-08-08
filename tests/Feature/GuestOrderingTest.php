@@ -158,8 +158,14 @@ class GuestOrderingTest extends TestCase
             ->assertOk()
             ->assertSee('Balinese breakfast')
             ->assertSee('Ход выполнения')
+            ->assertSee('Заказ создан гостем через каталог')
+            ->assertDontSee('workspace.history_guest')
             ->assertSee('Звонки временно недоступны')
             ->assertDontSee('Свяжитесь со стойкой регистрации по телефону в номере.');
+        $this->get(route('guest.orders.show', [$company, $order]).'?lang=en')
+            ->assertOk()
+            ->assertSee('Order created by the guest from the catalog')
+            ->assertDontSee('workspace.history_guest');
         $this->get(route('guest.bill', $company))
             ->assertOk()
             ->assertSee('Rp 420.000')
