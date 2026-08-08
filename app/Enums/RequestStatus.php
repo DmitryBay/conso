@@ -8,6 +8,7 @@ enum RequestStatus: string
     case Accepted = 'accepted';
     case InProgress = 'in_progress';
     case WaitingGuest = 'waiting_guest';
+    case Ready = 'ready';
     case Completed = 'completed';
     case Cancelled = 'cancelled';
 
@@ -18,6 +19,7 @@ enum RequestStatus: string
             self::Accepted => 'Приняты',
             self::InProgress => 'В работе',
             self::WaitingGuest => 'Ожидают гостя',
+            self::Ready => 'Готово',
             self::Completed => 'Завершены',
             self::Cancelled => 'Отменены',
         };
@@ -30,6 +32,7 @@ enum RequestStatus: string
             self::Accepted => 'info',
             self::InProgress => 'warning',
             self::WaitingGuest => 'secondary',
+            self::Ready => 'success',
             self::Completed => 'success',
             self::Cancelled => 'danger',
         };
@@ -37,6 +40,6 @@ enum RequestStatus: string
 
     public static function kanban(): array
     {
-        return [self::New, self::Accepted, self::InProgress, self::WaitingGuest, self::Completed];
+        return [self::New, self::Accepted, self::InProgress, self::WaitingGuest, self::Ready, self::Completed];
     }
 }

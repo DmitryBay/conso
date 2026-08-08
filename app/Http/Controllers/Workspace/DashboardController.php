@@ -19,8 +19,8 @@ class DashboardController extends Controller
 
         $stats = [
             'new' => (clone $base)->where('status', RequestStatus::New)->count(),
-            'active' => (clone $base)->whereIn('status', [RequestStatus::Accepted, RequestStatus::InProgress, RequestStatus::WaitingGuest])->count(),
-            'overdue' => (clone $base)->whereNotIn('status', [RequestStatus::Completed, RequestStatus::Cancelled])->where('due_at', '<', now())->count(),
+            'active' => (clone $base)->whereIn('status', [RequestStatus::Accepted, RequestStatus::InProgress, RequestStatus::WaitingGuest, RequestStatus::Ready])->count(),
+            'overdue' => (clone $base)->whereNotIn('status', [RequestStatus::Ready, RequestStatus::Completed, RequestStatus::Cancelled])->where('due_at', '<', now())->count(),
             'completed_today' => (clone $base)->where('status', RequestStatus::Completed)->whereDate('completed_at', today())->count(),
         ];
 

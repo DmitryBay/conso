@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Guest;
 
 use App\Actions\CreateGuestOrder;
 use App\Enums\RequestStatus;
+use App\Events\ServiceRequestChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
+use App\Models\User;
+use App\Notifications\WorkspaceNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -53,10 +57,68 @@ class OrderController extends Controller
     {
         /** @var GuestSession $stay */
         $stay = app('guestStay');
-        abort_unless($serviceRequest->guest_stay_id === $stay->guest_stay_id && $serviceRequest->company_id === $company->id, 404);
+        $this->ensureOrder($company, $serviceRequest, $stay);
         $serviceRequest->load(['items.service', 'history']);
 
         return view('guest.orders.show', compact('company', 'serviceRequest'));
+    }
+
+    public function confirm(Company $company, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        /** @var GuestSession $stay */
+        $stay = app('guestStay');
+        $this->ensureOrder($company, $serviceRequest, $stay);
+
+        [$order, $confirmed] = DB::transaction(function () use ($company, $serviceRequest, $stay) {
+            $order = ServiceRequest::query()->lockForUpdate()->findOrFail($serviceRequest->id);
+            $this->ensureOrder($company, $order, $stay);
+
+            if ($order->status === RequestStatus::Completed) {
+                return [$order, false];
+            }
+
+            abort_unless(in_array($order->status, [RequestStatus::Ready, RequestStatus::WaitingGuest], true), 409);
+            $from = $order->status;
+            $paymentStatus = $order->payment_method === 'room_charge' && $order->price_minor > 0
+                ? 'invoiced'
+                : $order->payment_status;
+
+            $order->update([
+                'status' => RequestStatus::Completed,
+                'completed_at' => now(),
+                'payment_status' => $paymentStatus,
+            ]);
+            $order->history()->create([
+                'from_status' => $from->value,
+                'to_status' => RequestStatus::Completed->value,
+                'note' => 'workspace.history_guest_confirmed',
+                'created_at' => now(),
+            ]);
+
+            return [$order, true];
+        });
+
+        if ($confirmed) {
+            User::where('company_id', $company->id)->where('is_active', true)->get()->each->notify(
+                new WorkspaceNotification([
+                    'title_key' => 'workspace.notification_guest_confirmed',
+                    'body_key' => 'workspace.notification_guest_confirmed_body',
+                    'params' => ['room' => $order->room_number, 'request' => $order->title],
+                    'request_id' => $order->id,
+                    'url' => route('workspace.requests.show', $order),
+                    'icon' => 'bi-person-check',
+                    'email' => true,
+                    'push' => true,
+                ])
+            );
+            ServiceRequestChanged::dispatch($order->fresh(), 'guest_confirmed');
+        }
+
+        if ($order->payment_status === 'invoiced') {
+            return redirect()->route('guest.bill', $company)->with('guest_success', __('guest.confirmed_and_billed'));
+        }
+
+        return redirect()->route('guest.orders.show', [$company, $order])->with('guest_success', __('guest.order_confirmed'));
     }
 
     public function bill(Company $company): View
@@ -65,6 +127,7 @@ class OrderController extends Controller
         $stay = app('guestStay');
         $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)
             ->where('payment_method', 'room_charge')
+            ->where('payment_status', 'invoiced')
             ->with('items.service')
             ->oldest()
             ->get();
@@ -76,5 +139,10 @@ class OrderController extends Controller
     private function ensureService(Company $company, ServiceNode $service): void
     {
         abort_unless($service->company_id === $company->id && $service->is_active && ! $service->isCategory(), 404);
+    }
+
+    private function ensureOrder(Company $company, ServiceRequest $serviceRequest, GuestSession $stay): void
+    {
+        abort_unless($serviceRequest->guest_stay_id === $stay->guest_stay_id && $serviceRequest->company_id === $company->id, 404);
     }
 }

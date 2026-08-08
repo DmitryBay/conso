@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ServiceRequestController extends Controller
@@ -136,6 +137,9 @@ class ServiceRequestController extends Controller
         ]);
         $to = RequestStatus::from($data['status']);
         $from = $serviceRequest->status;
+        if ($serviceRequest->guest_stay_id && $to === RequestStatus::Completed && $from !== RequestStatus::Completed) {
+            throw ValidationException::withMessages(['status' => __('workspace.guest_confirmation_required')]);
+        }
         $assignee = $this->tenantMember($request->user()->company_id, $data['assigned_to'] ?? $serviceRequest->assigned_to);
 
         DB::transaction(function () use ($request, $serviceRequest, $data, $from, $to, $assignee) {

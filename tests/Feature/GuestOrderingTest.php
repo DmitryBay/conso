@@ -124,7 +124,7 @@ class GuestOrderingTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_direct_order_creates_item_history_notification_and_combined_bill(): void
+    public function test_guest_confirms_ready_order_before_it_is_added_to_the_room_bill(): void
     {
         Event::fake([ServiceRequestChanged::class]);
         [$company, $room] = $this->hotel('Alpha Hotel');
@@ -166,7 +166,42 @@ class GuestOrderingTest extends TestCase
             ->assertOk()
             ->assertSee('Order created by the guest from the catalog')
             ->assertDontSee('workspace.history_guest');
-        $this->get(route('guest.bill', $company))
+        $this->get(route('guest.bill', $company).'?lang=ru')
+            ->assertOk()
+            ->assertSee('Начислений на номер пока нет')
+            ->assertDontSee('Rp 420.000');
+
+        $this->actingAs($owner)->patch(route('workspace.requests.status', $order), [
+            'status' => RequestStatus::Completed->value,
+        ])->assertSessionHasErrors('status');
+        $this->assertSame(RequestStatus::New, $order->refresh()->status);
+
+        $this->patch(route('workspace.requests.status', $order), [
+            'status' => RequestStatus::Ready->value,
+        ])->assertRedirect();
+        $this->assertSame(RequestStatus::Ready, $order->refresh()->status);
+        $this->assertSame('pending', $order->payment_status);
+
+        $this->withSession($session)->get(route('guest.orders.show', [$company, $order]))
+            ->assertOk()
+            ->assertSee('Подтвердите получение')
+            ->assertSee('Подтвердить и завершить');
+
+        $this->withSession($session)->post(route('guest.orders.confirm', [$company, $order]))
+            ->assertRedirect(route('guest.bill', $company));
+
+        $order->refresh();
+        $this->assertSame(RequestStatus::Completed, $order->status);
+        $this->assertSame('invoiced', $order->payment_status);
+        $this->assertNotNull($order->completed_at);
+        $this->assertDatabaseHas('service_request_status_histories', [
+            'service_request_id' => $order->id,
+            'from_status' => RequestStatus::Ready->value,
+            'to_status' => RequestStatus::Completed->value,
+            'note' => 'workspace.history_guest_confirmed',
+        ]);
+        $this->assertSame(2, $owner->notifications()->count());
+        $this->withSession($session)->get(route('guest.bill', $company))
             ->assertOk()
             ->assertSee('Rp 420.000')
             ->assertSee('≈ $25.45');
@@ -201,6 +236,10 @@ class GuestOrderingTest extends TestCase
         $this->assertSame('pending', $roomOrder->payment_status);
         $this->assertSame('paid', $cashOrder->payment_status);
 
+        $roomOrder->update(['status' => RequestStatus::Ready]);
+        $this->withSession($session)->post(route('guest.orders.confirm', [$company, $roomOrder]))
+            ->assertRedirect(route('guest.bill', $company));
+
         $this->withSession($session)->get(route('guest.orders.show', [$company, $cashOrder]))
             ->assertOk()
             ->assertSee('Оплачено сразу');
@@ -216,6 +255,34 @@ class GuestOrderingTest extends TestCase
             ->assertOk()
             ->assertSee('Rp 210.000')
             ->assertDontSee('Rp 150.000');
+    }
+
+    public function test_guest_can_confirm_a_free_request_waiting_for_guest(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $service = $this->service($company, 'Extra towels', 0);
+        $stay = $this->stay($company, $room);
+        $session = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($session)->post(route('guest.orders.store', [$company, $service]), [
+            'quantity' => 1,
+        ])->assertRedirect();
+
+        $order = ServiceRequest::firstOrFail();
+        $order->update(['status' => RequestStatus::WaitingGuest]);
+
+        $this->withSession($session)->post(route('guest.orders.confirm', [$company, $order]))
+            ->assertRedirect(route('guest.orders.show', [$company, $order]));
+
+        $order->refresh();
+        $this->assertSame(RequestStatus::Completed, $order->status);
+        $this->assertSame('not_required', $order->payment_status);
+        $this->assertDatabaseHas('service_request_status_histories', [
+            'service_request_id' => $order->id,
+            'from_status' => RequestStatus::WaitingGuest->value,
+            'to_status' => RequestStatus::Completed->value,
+            'note' => 'workspace.history_guest_confirmed',
+        ]);
     }
 
     public function test_guest_can_switch_to_arabic_with_rtl_and_localized_service(): void

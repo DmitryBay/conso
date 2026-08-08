@@ -55,6 +55,7 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
         Route::post('services/{serviceNode}/order', [GuestOrderController::class, 'store'])->name('orders.store');
         Route::get('orders', [GuestOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{serviceRequest}', [GuestOrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{serviceRequest}/confirm', [GuestOrderController::class, 'confirm'])->name('orders.confirm');
         Route::get('bill', [GuestOrderController::class, 'bill'])->name('bill');
         Route::post('push-subscriptions', [GuestNotificationPreferenceController::class, 'storePush'])->name('push-subscriptions.store');
         Route::delete('push-subscriptions', [GuestNotificationPreferenceController::class, 'destroyPush'])->name('push-subscriptions.destroy');

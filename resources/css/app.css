@@ -153,7 +153,7 @@ a { text-decoration: none; }
 .filter-check input { display:none; }
 .filter-check span { border:1px solid var(--hc-border); border-radius:9px; cursor:pointer; display:inline-block; font-size:11px; font-weight:650; padding:8px 11px; }
 .filter-check input:checked + span { background:var(--hc-navy); border-color:var(--hc-navy); color:#fff; }
-.kanban-board { display:grid; gap:13px; grid-template-columns:repeat(5, minmax(260px, 1fr)); min-height:560px; overflow-x:auto; padding-bottom:14px; }
+.kanban-board { display:grid; gap:13px; grid-template-columns:repeat(6, minmax(260px, 1fr)); min-height:560px; overflow-x:auto; padding-bottom:14px; }
 .kanban-column { background:#e9edef; border:1px solid #dce2e4; border-radius:14px; min-width:260px; padding:10px; transition:.15s ease; }
 .kanban-column.is-over { background:#dfe9e6; border-color:#77a899; }
 .kanban-column-header { align-items:center; display:flex; justify-content:space-between; padding:5px 5px 12px; }
@@ -491,6 +491,7 @@ a { text-decoration: none; }
 .order-status-label.status-new,.order-status-label.status-accepted { background:#e9f0f7; color:#47709c; }
 .order-status-label.status-in_progress { background:#fff0d9; color:#9b6a28; }
 .order-status-label.status-waiting_guest { background:#f0eaf6; color:#765397; }
+.order-status-label.status-ready { background:#e3f3eb; color:#276c56; }
 .order-status-label.status-completed { background:#e4f3eb; color:#267157; }
 .order-status-label.status-cancelled { background:#f9e8e7; color:#a84c47; }
 .order-chevron { color:#a3aaa7; }
@@ -500,7 +501,20 @@ a { text-decoration: none; }
 .guest-order-hero h2 { font-family:Georgia,serif; font-size:30px; font-weight:400; margin:5px 0 8px; }
 .guest-order-hero p { color:rgba(255,255,255,.66); font-size:11px; margin:0; }
 .guest-order-hero.status-completed { background:linear-gradient(130deg,#286b57,#1e4f43); }
+.guest-order-hero.status-ready { background:linear-gradient(130deg,#34765f,#235444); }
 .guest-order-hero.status-cancelled { background:linear-gradient(130deg,#75443f,#52302d); }
+.guest-confirm-card { align-items:center; background:#fff8e8; border:1px solid #ead8ae; border-radius:18px; display:flex; gap:16px; margin-top:16px; padding:20px; }
+.guest-confirm-card > span,.guest-bill-link > span { align-items:center; background:#f1dfb5; border-radius:13px; color:#765828; display:flex; flex:0 0 auto; font-size:22px; height:50px; justify-content:center; width:50px; }
+.guest-confirm-card > div { flex:1; }
+.guest-confirm-card h2 { font-family:Georgia,serif; font-size:19px; font-weight:400; margin:0 0 5px; }
+.guest-confirm-card p { color:#766d5d; font-size:11px; line-height:1.55; margin:0 0 14px; }
+.guest-confirm-card .guest-primary-button { max-width:320px; }
+.guest-bill-link { align-items:center; background:#fff; border:1px solid var(--guest-line); border-radius:18px; color:var(--guest-ink); display:flex; gap:14px; margin-top:16px; padding:16px 18px; }
+.guest-bill-link:hover { color:var(--guest-ink); }
+.guest-bill-link > div { display:flex; flex:1; flex-direction:column; }
+.guest-bill-link strong { font-size:13px; }
+.guest-bill-link small { color:var(--guest-muted); font-size:10px; margin-top:2px; }
+.guest-bill-link > i { color:var(--guest-muted); }
 .guest-order-detail-grid { margin-top:18px; }
 .payment-caption { align-items:center; background:#f4f6f3; border-radius:12px; display:flex; gap:10px; margin-top:15px; padding:12px; }
 .payment-caption > i { color:#477468; font-size:18px; }

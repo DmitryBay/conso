@@ -73,6 +73,6 @@ class ServiceRequest extends Model
 
     public function isOverdue(): bool
     {
-        return $this->due_at?->isPast() && ! in_array($this->status, [RequestStatus::Completed, RequestStatus::Cancelled], true);
+        return $this->due_at?->isPast() && ! in_array($this->status, [RequestStatus::Ready, RequestStatus::Completed, RequestStatus::Cancelled], true);
     }
 }
