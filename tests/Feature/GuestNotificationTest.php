@@ -71,6 +71,35 @@ class GuestNotificationTest extends TestCase
         $this->assertDatabaseMissing('push_subscriptions', ['endpoint' => $endpoint]);
     }
 
+    public function test_shared_tablet_subscription_moves_to_the_new_guest_session(): void
+    {
+        [$company, $room, $stay] = $this->hotel();
+        $previousSession = $this->guestSession($company, $room, $stay);
+        $newSession = $this->guestSession($company, $room, $stay);
+        $endpoint = 'https://push.example.test/subscriptions/shared-tablet';
+        $keys = ['p256dh' => Str::random(87), 'auth' => Str::random(22)];
+
+        $previousSession->updatePushSubscription($endpoint, $keys['p256dh'], $keys['auth'], 'aes128gcm');
+
+        $this->withSession(['guest_session.'.$company->id => $newSession->public_id])
+            ->postJson(route('guest.push-subscriptions.store', $company), [
+                'endpoint' => $endpoint,
+                'keys' => $keys,
+                'content_encoding' => 'aes128gcm',
+            ])->assertOk();
+
+        $this->assertDatabaseMissing('push_subscriptions', [
+            'subscribable_type' => GuestSession::class,
+            'subscribable_id' => $previousSession->id,
+            'endpoint' => $endpoint,
+        ]);
+        $this->assertDatabaseHas('push_subscriptions', [
+            'subscribable_type' => GuestSession::class,
+            'subscribable_id' => $newSession->id,
+            'endpoint' => $endpoint,
+        ]);
+    }
+
     public function test_status_change_notifies_the_guest_by_push_and_email(): void
     {
         Notification::fake();

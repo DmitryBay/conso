@@ -120,6 +120,14 @@ if (pushSettings) {
             toggleButton.disabled = true;
             return;
         }
+        if (subscription) {
+            const data = subscription.toJSON();
+            await request(storeUrl, 'POST', {
+                endpoint: data.endpoint,
+                keys: data.keys,
+                content_encoding: PushManager.supportedContentEncodings?.[0] || 'aes128gcm',
+            });
+        }
         updateState();
     };
 
@@ -176,6 +184,16 @@ if (pushSettings) {
 const guestStatusUrl = document.querySelector('meta[name="guest-session-status-url"]')?.content;
 const guestAccessUrl = document.querySelector('meta[name="guest-access-url"]')?.content;
 
+const clearGuestNotifications = async () => {
+    if (!('serviceWorker' in navigator)) return;
+    const registration = await navigator.serviceWorker.getRegistration('/guest/');
+    registration?.active?.postMessage({ type: 'CLEAR_GUEST_NOTIFICATIONS' });
+};
+
+document.querySelector('.guest-logout-form')?.addEventListener('submit', () => {
+    clearGuestNotifications().catch(() => {});
+});
+
 if (guestStatusUrl && guestAccessUrl) {
     const verifyGuestSession = async () => {
         try {
@@ -186,6 +204,7 @@ if (guestStatusUrl && guestAccessUrl) {
             });
 
             if (response.status === 401) {
+                await clearGuestNotifications();
                 window.location.replace(guestAccessUrl);
             }
         } catch {

@@ -22,6 +22,13 @@ self.addEventListener('notificationclick', event => {
     }));
 });
 
+self.addEventListener('message', event => {
+    if (event.data?.type !== 'CLEAR_GUEST_NOTIFICATIONS') return;
+    event.waitUntil(self.registration.getNotifications().then(notifications => {
+        notifications.forEach(notification => notification.close());
+    }));
+});
+
 self.addEventListener('fetch', event => {
     if (event.request.mode !== 'navigate') return;
 
