@@ -366,6 +366,12 @@ a { text-decoration: none; }
 .guest-menu-tile > strong { font-family:Georgia,serif; font-size:17px; font-weight:400; margin-top:auto; }
 .guest-menu-tile > small { color:rgba(255,255,255,.62); font-size:8px; margin-top:3px; }
 .guest-menu-tile > i { bottom:17px; color:#e7bf91; position:absolute; right:17px; }
+
+@media (min-width:768px) and (max-width:1180px) {
+    .guest-main { padding-left:28px; padding-right:28px; }
+    .guest-menu-page { grid-template-rows:repeat(3,155px); }
+    .guest-menu-tile { height:155px; min-width:0; }
+}
 .guest-category-panels { margin-top:15px; }
 .guest-category-panel { background:#fff; border:1px solid var(--guest-line); border-radius:18px; overflow:hidden; }
 .guest-category-modal .modal-content { border:0; border-radius:20px; overflow:hidden; }

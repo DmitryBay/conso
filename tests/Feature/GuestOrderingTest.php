@@ -421,7 +421,7 @@ class GuestOrderingTest extends TestCase
             ->assertSee('A 2-day escape')
             ->assertSee('Fits your stay')
             ->assertSee('data-guest-menu', false)
-            ->assertSee('data-page-size="6"', false)
+            ->assertSee('data-page-size="9"', false)
             ->assertSee('data-bs-target="#guestGuideMenu"', false)
             ->assertDontSee('guest-hero', false)
             ->assertSee('guest-guide-modal', false)

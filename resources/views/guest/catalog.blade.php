@@ -11,11 +11,11 @@
     $menuItems = $categories->values()
         ->map(fn ($category) => ['type' => 'category', 'category' => $category])
         ->push(['type' => 'guides']);
-    $menuPages = $menuItems->chunk(6);
+    $menuPages = $menuItems->chunk(9);
 @endphp
 
 <section class="guest-section service-catalog"><div class="guest-section-title"><div><span class="eyebrow">{{ __('guest.catalog') }}</span><h2>{{ __('guest.sections') }}</h2></div><span>{{ $menuItems->count() }}</span></div>
-<div class="guest-main-menu" data-guest-menu data-page-size="6">
+<div class="guest-main-menu" data-guest-menu data-page-size="9">
     <div class="guest-menu-track" data-menu-track>
     @foreach($menuPages as $page)
         <div class="guest-menu-page" data-menu-page>
@@ -27,7 +27,7 @@
                     $category = $menuItem['category'];
                     $categoryServices = $category->children->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true))->merge($category->children->filter(fn($node) => $node->type === \App\Enums\ServiceNodeType::Category)->flatMap(fn($node) => $node->children))->filter(fn($node) => in_array($node->type, [\App\Enums\ServiceNodeType::Service, \App\Enums\ServiceNodeType::Guide], true));
                     $menuBackground = $category->resolvedBackground($company);
-                    $legacyKey = match($loop->parent->index * 6 + $loop->index) { 0=>'food',1=>'room',2=>'transport',3=>'wellness',4=>'transport',default=>'room' };
+                    $legacyKey = match($loop->parent->index * 9 + $loop->index) { 0=>'food',1=>'room',2=>'transport',3=>'wellness',4=>'transport',default=>'room' };
                 @endphp
                 <button class="guest-menu-tile" type="button" data-bs-toggle="modal" data-bs-target="#guestCategory-{{ $category->id }}" style="--service-bg:url('{{ $menuBackground?->url() ?? asset('images/service-backgrounds/'.$legacyKey.'.jpg') }}');--service-position:{{ $menuBackground?->background_position ?? 'center' }};--service-size:{{ $menuBackground?->background_size ?? 'cover' }}"><span><i class="bi {{ $category->icon ?: 'bi-grid' }}"></i></span><strong>{{ $category->localizedName() }}</strong><small>{{ __('guest.services_count',['count'=>$categoryServices->count()]) }}</small><i class="bi bi-arrow-up-right"></i></button>
             @endif
