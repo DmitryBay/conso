@@ -590,6 +590,56 @@ class GuestOrderingTest extends TestCase
         $this->assertSame('Pesan khusus yang berbeda untuk tamu Indonesia.', $canggu->localizedDescription('id'));
     }
 
+    public function test_guest_can_cancel_before_work_and_request_refund_after_ready(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $session = $this->stay($company, $room);
+        $guestSession = ['guest_session.'.$company->id => $session->public_id];
+        $order = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id,
+            'guest_stay_id' => $session->guest_stay_id, 'guest_session_id' => $session->id,
+            'room_number' => $room->number, 'title' => 'Late breakfast', 'status' => RequestStatus::New,
+            'priority' => 'normal', 'price_minor' => 200000, 'payment_method' => 'room_charge', 'payment_status' => 'pending',
+        ]);
+
+        $this->withSession($guestSession)->post(route('guest.orders.cancel', [$company, $order]))->assertRedirect();
+        $order->refresh();
+        $this->assertSame(RequestStatus::Cancelled, $order->status);
+        $this->assertSame('cancelled', $order->payment_status);
+        $this->withSession($guestSession)->get(route('guest.bill', $company))->assertDontSee('Late breakfast');
+
+        $refundOrder = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id,
+            'guest_stay_id' => $session->guest_stay_id, 'guest_session_id' => $session->id,
+            'room_number' => $room->number, 'title' => 'Spa treatment', 'status' => RequestStatus::Ready,
+            'priority' => 'normal', 'price_minor' => 500000, 'payment_method' => 'room_charge', 'payment_status' => 'invoiced',
+        ]);
+        $this->withSession($guestSession)->post(route('guest.orders.refund', [$company, $refundOrder]), ['refund_type' => 'partial'])->assertRedirect();
+        $this->assertSame('requested_partial', $refundOrder->fresh()->refund_status);
+        $this->withSession($guestSession)->get(route('guest.bill', $company))->assertDontSee('Spa treatment');
+    }
+
+    public function test_clarification_marks_an_in_progress_request(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $session = $this->stay($company, $room);
+        $order = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id,
+            'guest_stay_id' => $session->guest_stay_id, 'guest_session_id' => $session->id,
+            'room_number' => $room->number, 'title' => 'Transfer', 'status' => RequestStatus::InProgress,
+            'priority' => 'normal', 'payment_status' => 'not_required',
+        ]);
+
+        $this->withSession(['guest_session.'.$company->id => $session->public_id])
+            ->post(route('guest.orders.clarification', [$company, $order]))->assertRedirect();
+
+        $this->assertNotNull($order->fresh()->clarification_requested_at);
+        $this->assertDatabaseHas('service_request_status_histories', [
+            'service_request_id' => $order->id,
+            'note' => 'workspace.history_clarification_requested',
+        ]);
+    }
+
     private function hotel(string $name): array
     {
         $company = Company::create([

@@ -6,6 +6,7 @@ use App\Actions\CloseExpiredStays;
 use App\Enums\CompanyStatus;
 use App\Enums\GuestStayStatus;
 use App\Enums\UserRole;
+use App\Mail\FinalBillMail;
 use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\GuestStay;
@@ -14,6 +15,7 @@ use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use NotificationChannels\WebPush\PushSubscription;
 use Tests\TestCase;
@@ -256,6 +258,31 @@ class GuestStayManagementTest extends TestCase
         ]);
         $this->actingAs($otherManager)->get(route('workspace.stays.show', $stay))->assertNotFound();
         $this->get(route('workspace.stays.bill', $stay))->assertNotFound();
+    }
+
+    public function test_manager_can_email_final_unpaid_bill_with_additional_description(): void
+    {
+        Mail::fake();
+        [$company, $room, $manager] = $this->hotel();
+        $stay = GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Anna Petrova', 'guest_email' => 'anna@example.com',
+            'check_in_at' => now()->subDay(), 'check_out_at' => now()->addDay(), 'nights' => 2,
+            'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::CheckedIn,
+        ]);
+        ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'guest_stay_id' => $stay->id,
+            'room_number' => $room->number, 'title' => 'Airport transfer', 'status' => 'completed', 'priority' => 'normal',
+            'price_minor' => 450000, 'payment_method' => 'room_charge', 'payment_status' => 'invoiced',
+        ]);
+
+        $this->actingAs($manager)->post(route('workspace.stays.bill.email', $stay), [
+            'additional_description' => 'Transfer includes luggage assistance.',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        Mail::assertSent(FinalBillMail::class, fn (FinalBillMail $mail) => $mail->hasTo('anna@example.com')
+            && collect($mail->attachments())->pluck('as')->contains('final-bill.pdf')
+            && collect($mail->attachments())->pluck('as')->contains('additional-services.txt'));
     }
 
     private function hotel(): array

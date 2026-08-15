@@ -44,24 +44,32 @@
 
     <aside>
         <section class="surface-card p-4 sticky-lg-top client-bill-picker">
-            <div class="client-section-heading"><div><div class="eyebrow">{{ __('workspace.bill_english') }}</div><h2 class="section-title mt-1">{{ __('workspace.paid_services') }}</h2></div><span class="metric-icon metric-green"><i class="bi bi-receipt"></i></span></div>
-            <p class="client-bill-hint">{{ __('workspace.paid_services_hint') }}</p>
+            <div class="client-section-heading"><div><div class="eyebrow">{{ __('workspace.bill_english') }}</div><h2 class="section-title mt-1">{{ __('workspace.ordered_services') }}</h2></div><span class="metric-icon metric-green"><i class="bi bi-receipt"></i></span></div>
+            <p class="client-bill-hint">{{ __('workspace.ordered_services_hint') }}</p>
             <form method="GET" action="{{ route('workspace.stays.bill', $guestStay) }}" target="_blank" data-bill-selection>
                 <input type="hidden" name="selection" value="1">
                 <div class="bill-service-selection">
                     @forelse($billableOrders as $order)
-                        <label><input type="checkbox" name="order_ids[]" value="{{ $order->id }}" checked><span><strong>{{ $order->items->first()?->service?->localizedName() ?? $order->title }}</strong><small>{{ $order->created_at->format('d.m.Y') }} · {{ $order->payment_status === 'paid' ? __('workspace.payment_paid') : __('workspace.payment_room_bill') }}</small></span><b>{{ $money->format($order->price_minor, $currentCompany->currency) }}</b></label>
+                        <label><input type="checkbox" name="order_ids[]" value="{{ $order->id }}" @checked(in_array($order->payment_status,['pending','invoiced'],true))><span><strong>{{ $order->items->first()?->service?->localizedName() ?? $order->title }}</strong><small>{{ $order->created_at->format('d.m.Y') }} · {{ $order->payment_status === 'paid' ? __('workspace.payment_paid') : __('workspace.payment_due') }}</small></span><b>{{ $money->format($order->price_minor, $currentCompany->currency) }}</b></label>
                     @empty
-                        <div class="bill-selection-empty"><i class="bi bi-receipt-cutoff"></i><span>{{ __('workspace.no_paid_services') }}</span></div>
+                        <div class="bill-selection-empty"><i class="bi bi-receipt-cutoff"></i><span>{{ __('workspace.no_ordered_services') }}</span></div>
                     @endforelse
                 </div>
                 @if($billableOrders->isNotEmpty())
-                    <div class="bill-selection-total"><span>{{ __('workspace.selected_total') }}</span><strong data-selected-total data-currency="{{ $currentCompany->currency }}">{{ $money->format((int) $billableOrders->sum('price_minor'), $currentCompany->currency) }}</strong></div>
+                    <div class="bill-selection-total"><span>{{ __('workspace.selected_total') }}</span><strong data-selected-total data-currency="{{ $currentCompany->currency }}">{{ $money->format((int) $billableOrders->whereIn('payment_status',['pending','invoiced'])->sum('price_minor'), $currentCompany->currency) }}</strong></div>
                     @foreach($billableOrders as $order)<input type="hidden" data-order-amount="{{ $order->id }}" value="{{ $order->price_minor }}">@endforeach
                     <button class="btn btn-primary w-100"><i class="bi bi-printer me-2"></i>{{ __('workspace.open_printable_bill') }}</button>
+                    <a class="btn btn-outline-primary w-100 mt-2" target="_blank" href="{{ route('workspace.stays.bill',$guestStay) }}"><i class="bi bi-file-earmark-check me-2"></i>{{ __('workspace.final_bill') }}</a>
                     <div class="form-hint text-center mt-2">{{ __('workspace.bill_opens_english') }}</div>
                 @endif
             </form>
+            @if($guestStay->guest_email)
+            <form class="mt-3 border-top pt-3" method="POST" action="{{ route('workspace.stays.bill.email',$guestStay) }}">@csrf
+                @foreach($billableOrders->whereIn('payment_status',['pending','invoiced']) as $order)<input type="hidden" name="order_ids[]" value="{{ $order->id }}">@endforeach
+                <label class="form-label">{{ __('workspace.additional_services_description') }}</label><textarea class="form-control mb-2" name="additional_description" rows="3" placeholder="{{ __('workspace.additional_services_description_hint') }}"></textarea>
+                <button class="btn btn-success w-100"><i class="bi bi-envelope me-2"></i>{{ __('workspace.email_final_bill',['email'=>$guestStay->guest_email]) }}</button>
+            </form>
+            @endif
         </section>
     </aside>
 </div>

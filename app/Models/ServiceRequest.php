@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'public_id', 'company_id', 'guest_stay_id', 'guest_session_id', 'service_node_id', 'assigned_to', 'created_by', 'source',
     'room_number', 'guest_name', 'title', 'description', 'status', 'priority',
     'price_minor', 'payment_method', 'payment_status', 'due_at', 'accepted_at', 'completed_at', 'archived_at',
+    'clarification_requested_at', 'refund_status', 'refund_amount_minor', 'refund_requested_at', 'refunded_at',
 ])]
 class ServiceRequest extends Model
 {
@@ -28,6 +29,10 @@ class ServiceRequest extends Model
             'accepted_at' => 'datetime',
             'completed_at' => 'datetime',
             'archived_at' => 'datetime',
+            'clarification_requested_at' => 'datetime',
+            'refund_amount_minor' => 'integer',
+            'refund_requested_at' => 'datetime',
+            'refunded_at' => 'datetime',
             'price_minor' => 'integer',
         ];
     }
@@ -75,6 +80,16 @@ class ServiceRequest extends Model
     public function isOverdue(): bool
     {
         return $this->due_at?->isPast() && ! in_array($this->status, [RequestStatus::Ready, RequestStatus::Completed, RequestStatus::Cancelled], true);
+    }
+
+    public function hasRefund(): bool
+    {
+        return filled($this->refund_status);
+    }
+
+    public function isRefunded(): bool
+    {
+        return in_array($this->refund_status, ['partial', 'full'], true);
     }
 
     public function roomDisplayName(): string

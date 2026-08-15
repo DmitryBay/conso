@@ -33,7 +33,7 @@ class SettingsController extends Controller
             'support_email' => ['required', 'email', 'max:255'],
             'default_trial_days' => ['required', 'integer', 'min:1', 'max:365'],
             'default_timezone' => ['required', 'timezone'],
-            'default_currency' => ['required', Rule::in(['IDR', 'USD', 'EUR', 'RUB'])],
+            'default_currency' => ['required', Rule::in(['IDR', 'USD', 'EUR', 'AUD'])],
             'email_notifications_enabled' => ['nullable', 'boolean'],
             'push_notifications_enabled' => ['nullable', 'boolean'],
         ]);

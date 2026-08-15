@@ -5,6 +5,7 @@ return [
     'usd_rates' => [
         'IDR' => (float) env('USD_IDR_RATE', 16500),
         'EUR' => (float) env('USD_EUR_RATE', 0.92),
+        'AUD' => (float) env('USD_AUD_RATE', 1.52),
         'GBP' => (float) env('USD_GBP_RATE', 0.78),
         'AED' => 3.6725,
         'CNY' => (float) env('USD_CNY_RATE', 7.20),

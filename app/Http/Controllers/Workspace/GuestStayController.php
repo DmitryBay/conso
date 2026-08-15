@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Workspace;
 use App\Enums\GuestStayStatus;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
+use App\Mail\FinalBillMail;
 use App\Models\GuestStay;
 use App\Models\Room;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -25,6 +28,7 @@ class GuestStayController extends Controller
         $companyId = $company->id;
         $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
         $stays = GuestStay::where('company_id', $companyId)->with(['room', 'requests'])
+            ->whereIn('status', [GuestStayStatus::CheckedIn, GuestStayStatus::Upcoming])
             ->latest('check_in_at')->get();
 
         $filters = $request->validate([
@@ -147,6 +151,7 @@ class GuestStayController extends Controller
 
                 return [
                     'occupied' => (bool) $stay,
+                    'stay_id' => $stay?->id,
                     'guest' => $stay?->guest_name,
                     'label' => $stay
                         ? ($stay->guest_name.' · '.$stay->check_in_at->copy()->setTimezone($timezone)->format('d.m').'–'.$stay->check_out_at->copy()->setTimezone($timezone)->format('d.m'))
@@ -216,7 +221,8 @@ class GuestStayController extends Controller
         $orders = $guestStay->requests->sortByDesc('created_at')->values();
         $billableOrders = $orders->filter(fn ($order) => $order->price_minor > 0
             && $order->status !== RequestStatus::Cancelled
-            && in_array($order->payment_status, ['paid', 'invoiced'], true));
+            && ! $order->hasRefund()
+            && in_array($order->payment_status, ['pending', 'paid', 'invoiced'], true));
 
         return view('workspace.stays.show', compact('guestStay', 'orders', 'billableOrders'));
     }
@@ -247,15 +253,78 @@ class GuestStayController extends Controller
         $orders = $guestStay->requests()
             ->where('price_minor', '>', 0)
             ->where('status', '!=', RequestStatus::Cancelled)
-            ->whereIn('payment_status', ['paid', 'invoiced'])
+            ->whereNull('refund_status')
+            ->whereIn('payment_status', ['pending', 'paid', 'invoiced'])
             ->when(($data['selection'] ?? false) && $selectedIds->isEmpty(), fn ($query) => $query->whereRaw('1 = 0'))
             ->when($selectedIds->isNotEmpty(), fn ($query) => $query->whereIn('id', $selectedIds))
+            ->when(! ($data['selection'] ?? false) && $selectedIds->isEmpty(), fn ($query) => $query->whereIn('payment_status', ['pending', 'invoiced']))
             ->with('items.service')
             ->oldest()
             ->get();
         $total = (int) $orders->sum('price_minor');
 
         return view('workspace.stays.bill', compact('guestStay', 'orders', 'total'));
+    }
+
+    public function emailBill(Request $request, GuestStay $guestStay): RedirectResponse
+    {
+        $this->ensureTenant($request, $guestStay);
+        abort_unless(filled($guestStay->guest_email), 422);
+        $data = $request->validate([
+            'order_ids' => ['nullable', 'array'],
+            'order_ids.*' => ['integer', 'distinct'],
+            'additional_description' => ['nullable', 'string', 'max:10000'],
+        ]);
+        $selectedIds = collect($data['order_ids'] ?? [])->map(fn ($id) => (int) $id);
+        $orders = $guestStay->requests()
+            ->where('price_minor', '>', 0)
+            ->where('status', '!=', RequestStatus::Cancelled)
+            ->whereNull('refund_status')
+            ->whereIn('payment_status', ['pending', 'invoiced'])
+            ->when($selectedIds->isNotEmpty(), fn ($query) => $query->whereIn('id', $selectedIds))
+            ->with('items.service')->oldest()->get();
+        $guestStay->loadMissing(['room', 'company']);
+        $total = (int) $orders->sum('price_minor');
+        $pdf = Pdf::loadView('workspace.stays.bill-pdf', [
+            'guestStay' => $guestStay,
+            'orders' => $orders,
+            'total' => $total,
+            'company' => $guestStay->company,
+        ])->setPaper('a4');
+
+        Mail::to($guestStay->guest_email)->send(new FinalBillMail(
+            $guestStay,
+            $pdf->output(),
+            $data['additional_description'] ?? null,
+        ));
+
+        return back()->with('success', __('workspace.bill_emailed'));
+    }
+
+    public function archive(Request $request): View
+    {
+        $company = $request->user()->company;
+        $filters = $request->validate([
+            'calendar_month' => ['nullable', 'date_format:Y-m'],
+            'room_id' => ['nullable', 'integer'],
+        ]);
+        $rooms = Room::where('company_id', $company->id)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
+        $stays = GuestStay::where('company_id', $company->id)
+            ->whereIn('status', [GuestStayStatus::CheckedOut, GuestStayStatus::Cancelled])
+            ->with(['room', 'requests'])->orderByDesc('check_in_at')->paginate(50)->withQueryString();
+        $selectedRoomId = isset($filters['room_id']) && $rooms->contains('id', (int) $filters['room_id']) ? (int) $filters['room_id'] : null;
+        $calendarStart = isset($filters['calendar_month'])
+            ? Carbon::createFromFormat('Y-m-d', $filters['calendar_month'].'-01', $company->timezone)->startOfDay()
+            : now($company->timezone)->subMonthsNoOverflow(2)->startOfMonth();
+        $calendarEnd = $calendarStart->copy()->addMonthsNoOverflow(3)->startOfMonth();
+        $calendarStays = GuestStay::where('company_id', $company->id)
+            ->where('check_in_at', '<', $calendarEnd->copy()->utc())
+            ->where('check_out_at', '>', $calendarStart->copy()->utc())
+            ->whereIn('status', [GuestStayStatus::CheckedOut, GuestStayStatus::Cancelled])
+            ->get();
+        $calendar = $this->buildCalendar($rooms, $calendarStays, $calendarStart, $calendarEnd, $company->timezone);
+
+        return view('workspace.stays.archive', compact('rooms', 'stays', 'calendar', 'calendarStart', 'selectedRoomId'));
     }
 
     public function extend(Request $request, GuestStay $guestStay): RedirectResponse

@@ -58,6 +58,9 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
         Route::get('orders-statuses', [GuestOrderController::class, 'statuses'])->name('orders.statuses');
         Route::get('orders/{serviceRequest}', [GuestOrderController::class, 'show'])->name('orders.show');
         Route::post('orders/{serviceRequest}/confirm', [GuestOrderController::class, 'confirm'])->name('orders.confirm');
+        Route::post('orders/{serviceRequest}/cancel', [GuestOrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('orders/{serviceRequest}/clarification', [GuestOrderController::class, 'clarification'])->name('orders.clarification');
+        Route::post('orders/{serviceRequest}/refund', [GuestOrderController::class, 'requestRefund'])->name('orders.refund');
         Route::get('bill', [GuestOrderController::class, 'bill'])->name('bill');
         Route::post('push-subscriptions', [GuestNotificationPreferenceController::class, 'storePush'])->name('push-subscriptions.store');
         Route::delete('push-subscriptions', [GuestNotificationPreferenceController::class, 'destroyPush'])->name('push-subscriptions.destroy');
@@ -87,13 +90,16 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::patch('requests/{serviceRequest}/take', [ServiceRequestController::class, 'take'])->name('requests.take');
     Route::patch('requests/{serviceRequest}/status', [ServiceRequestController::class, 'status'])->name('requests.status');
     Route::patch('requests/{serviceRequest}/archive', [ServiceRequestController::class, 'archive'])->name('requests.archive');
+    Route::patch('requests/{serviceRequest}/refund', [ServiceRequestController::class, 'refund'])->name('requests.refund');
 
     Route::get('stays', [GuestStayController::class, 'index'])->name('stays.index');
+    Route::get('stays-archive', [GuestStayController::class, 'archive'])->name('stays.archive');
     Route::get('stays/availability', [GuestStayController::class, 'availability'])->name('stays.availability');
     Route::post('stays', [GuestStayController::class, 'store'])->name('stays.store');
     Route::get('stays/{guestStay}', [GuestStayController::class, 'show'])->name('stays.show');
     Route::patch('stays/{guestStay}', [GuestStayController::class, 'update'])->name('stays.update');
     Route::get('stays/{guestStay}/bill', [GuestStayController::class, 'bill'])->name('stays.bill');
+    Route::post('stays/{guestStay}/bill/email', [GuestStayController::class, 'emailBill'])->name('stays.bill.email');
     Route::patch('stays/{guestStay}/extend', [GuestStayController::class, 'extend'])->name('stays.extend');
     Route::patch('stays/{guestStay}/pin', [GuestStayController::class, 'updatePin'])->name('stays.pin');
     Route::patch('stays/{guestStay}/checkout', [GuestStayController::class, 'checkout'])->name('stays.checkout');

@@ -3,7 +3,8 @@
 <div class="sidebar-label">{{ __('workspace.work_shift') }}</div><nav>
 <a class="sidebar-link {{ request()->routeIs('workspace.dashboard') ? 'active' : '' }}" href="{{ route('workspace.dashboard') }}"><i class="bi bi-grid-1x2"></i>{{ __('workspace.overview') }}</a>
 <a class="sidebar-link {{ request()->routeIs('workspace.requests.*') ? 'active' : '' }}" href="{{ route('workspace.requests.index') }}"><i class="bi bi-kanban"></i>{{ __('workspace.requests') }} @php($newCount=$currentCompany->requests()->where('status','new')->count()) @if($newCount)<span class="sidebar-badge">{{ $newCount }}</span>@endif</a>
-<a class="sidebar-link {{ request()->routeIs('workspace.stays.*') ? 'active' : '' }}" href="{{ route('workspace.stays.index') }}"><i class="bi bi-door-open"></i>{{ __('workspace.stays') }}</a>
+<a class="sidebar-link {{ request()->routeIs('workspace.stays.*') && !request()->routeIs('workspace.stays.archive') ? 'active' : '' }}" href="{{ route('workspace.stays.index') }}"><i class="bi bi-door-open"></i>{{ __('workspace.stays') }}</a>
+<a class="sidebar-link {{ request()->routeIs('workspace.stays.archive') ? 'active' : '' }}" href="{{ route('workspace.stays.archive') }}"><i class="bi bi-archive"></i>{{ __('workspace.stays_archive') }}</a>
 </nav>
 <div class="sidebar-label mt-4">{{ __('workspace.management') }}</div><nav>
 @if(auth()->user()->isOwner())<a class="sidebar-link {{ request()->routeIs('workspace.rooms.*') ? 'active' : '' }}" href="{{ route('workspace.rooms.index') }}"><i class="bi bi-houses"></i>{{ __('workspace.room_inventory') }}</a>@endif

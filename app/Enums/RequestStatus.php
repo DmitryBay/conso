@@ -63,6 +63,6 @@ enum RequestStatus: string
 
     public static function kanban(): array
     {
-        return [self::New, self::Accepted, self::InProgress, self::WaitingGuest, self::Ready, self::Completed];
+        return [self::New, self::Accepted, self::InProgress, self::WaitingGuest, self::Ready];
     }
 }

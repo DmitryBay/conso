@@ -164,6 +164,8 @@ a { text-decoration: none; }
 .kanban-card { background:#fff; border:1px solid #dde3e4; border-radius:12px; box-shadow:0 1px 2px rgba(28,44,48,.04); cursor:grab; padding:13px; }
 .kanban-card.is-dragging { opacity:.45; }
 .kanban-card.is-archived { border-style:dashed; }
+.kanban-card.needs-clarification { background:#fffaf0; border-color:#e8b65d; box-shadow:0 0 0 2px rgba(232,182,93,.12); }
+.kanban-card.has-refund { background:#fff5f5; border-color:#dc8b8b; }
 .archive-label { align-items:center; background:#eef0f1; border-radius:999px; color:#667174; display:inline-flex; font-size:9px; font-weight:750; padding:3px 7px; text-transform:uppercase; }
 .kanban-title { color:#202c2e; display:block; font-size:13px; font-weight:720; line-height:1.35; margin-top:11px; }
 .kanban-title:hover { color:#315f8f; }
@@ -860,6 +862,7 @@ a { text-decoration: none; }
 .occupancy-row-label small { align-self:stretch; color:#899792; font-size:8px; margin-top:1px; }
 .occupancy-cell { align-items:center; border-right:1px solid #edf1ef; display:flex; justify-content:center; position:relative; }
 .occupancy-cell.is-occupied { background:#d8e9e1; }
+.occupancy-cell.is-occupied:hover { background:#c7dfd4; }
 .occupancy-cell.is-occupied span { align-items:center; background:#397764; border-radius:50%; color:#fff; display:flex; font-size:7px; font-weight:800; height:18px; justify-content:center; width:18px; }
 .occupancy-cell.is-free:hover { background:#eef7f3; }
 .occupancy-empty { color:#73827d; font-size:11px; padding:28px; }

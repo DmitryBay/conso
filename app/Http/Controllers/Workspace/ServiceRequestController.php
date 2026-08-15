@@ -7,6 +7,7 @@ use App\Enums\RequestStatus;
 use App\Enums\ServiceNodeType;
 use App\Events\ServiceRequestChanged;
 use App\Http\Controllers\Controller;
+use App\Models\GuestStay;
 use App\Models\Room;
 use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
@@ -27,18 +28,40 @@ class ServiceRequestController extends Controller
     public function index(Request $request): View
     {
         $companyId = $request->user()->company_id;
+        $filters = $request->validate([
+            'mine' => ['nullable', 'boolean'],
+            'priority' => ['nullable', Rule::enum(RequestPriority::class)],
+            'guest_stay_id' => ['nullable', 'integer'],
+            'guest_name' => ['nullable', 'string', 'max:160'],
+            'refund' => ['nullable', 'boolean'],
+            'cancelled' => ['nullable', 'boolean'],
+            'archive' => ['nullable', 'boolean'],
+            'all_stays' => ['nullable', 'boolean'],
+        ]);
         $query = ServiceRequest::where('company_id', $companyId)
             ->with(['assignee', 'service', 'guestStay.room'])
             ->when($request->boolean('mine'), fn ($query) => $query->where('assigned_to', $request->user()->id))
             ->when($request->string('priority')->toString(), fn ($query, $priority) => $query->where('priority', $priority))
+            ->when($filters['guest_stay_id'] ?? null, fn ($query, $stayId) => $query->where('guest_stay_id', $stayId))
+            ->when($filters['guest_name'] ?? null, fn ($query, $name) => $query->whereHas('guestStay', fn ($stay) => $stay->where('guest_name', 'like', '%'.$name.'%')))
+            ->when($request->boolean('refund'), fn ($query) => $query->whereNotNull('refund_status'))
+            ->when($request->boolean('cancelled'), fn ($query) => $query->where('status', RequestStatus::Cancelled))
+            ->when(! $request->boolean('cancelled'), fn ($query) => $query->where('status', '!=', RequestStatus::Cancelled))
+            ->when($request->boolean('archive'), fn ($query) => $query->whereNotNull('archived_at'))
+            ->when(! $request->boolean('all_stays') && ! $request->boolean('archive'), fn ($query) => $query->where(function ($active) {
+                $active->whereNull('guest_stay_id')->orWhereHas('guestStay', fn ($stay) => $stay->where('status', 'checked_in'));
+            }))
             ->latest();
 
-        $requests = $query->get()->groupBy(fn (ServiceRequest $item) => $item->status->value);
+        $requests = $query->get()->groupBy(fn (ServiceRequest $item) => $item->status === RequestStatus::Completed
+            ? RequestStatus::Ready->value
+            : $item->status->value);
         $members = User::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $services = ServiceNode::where('company_id', $companyId)->where('type', ServiceNodeType::Service)->where('is_active', true)->orderBy('name')->get();
         $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
+        $clients = GuestStay::where('company_id', $companyId)->whereIn('status', ['checked_in', 'upcoming'])->with('room')->orderBy('guest_name')->get();
 
-        return view('workspace.requests.index', compact('requests', 'members', 'services', 'rooms'));
+        return view('workspace.requests.index', compact('requests', 'members', 'services', 'rooms', 'clients'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -56,14 +79,17 @@ class ServiceRequestController extends Controller
         ]);
         $companyId = $request->user()->company_id;
         $room = Room::where('company_id', $companyId)->where('is_active', true)->where('number', $data['room_number'])->firstOrFail();
+        $guestStay = GuestStay::where('company_id', $companyId)->where('room_id', $room->id)
+            ->where('status', 'checked_in')->latest('check_in_at')->first();
         $service = $this->tenantService($companyId, $data['service_node_id'] ?? null);
         $assignee = $this->tenantMember($companyId, $data['assigned_to'] ?? null);
 
-        $serviceRequest = DB::transaction(function () use ($request, $data, $companyId, $service, $assignee) {
+        $serviceRequest = DB::transaction(function () use ($request, $data, $companyId, $service, $assignee, $guestStay) {
             $item = ServiceRequest::create([
                 ...$data,
                 'public_id' => (string) Str::uuid(),
                 'company_id' => $companyId,
+                'guest_stay_id' => $guestStay?->id,
                 'service_node_id' => $service?->id,
                 'assigned_to' => $assignee?->id,
                 'created_by' => $request->user()->id,
@@ -169,6 +195,7 @@ class ServiceRequestController extends Controller
                 'accepted_at' => $to !== RequestStatus::New ? ($lockedRequest->accepted_at ?? now()) : $lockedRequest->accepted_at,
                 'completed_at' => $to === RequestStatus::Completed ? ($lockedRequest->completed_at ?? now()) : null,
                 'payment_status' => $paymentStatus,
+                'clarification_requested_at' => ($from !== $to || filled($data['note'] ?? null)) ? null : $lockedRequest->clarification_requested_at,
             ]);
             $lockedRequest->history()->create([
                 'user_id' => $request->user()->id,
@@ -218,6 +245,44 @@ class ServiceRequestController extends Controller
         }
 
         return $this->response($request, __($archived ? 'workspace.request_archived' : 'workspace.request_restored'));
+    }
+
+    public function refund(Request $request, ServiceRequest $serviceRequest): RedirectResponse|JsonResponse
+    {
+        $this->ensureTenant($request, $serviceRequest);
+        $data = $request->validate([
+            'refund_type' => ['required', Rule::in(['partial', 'full', 'none'])],
+            'refund_amount' => ['nullable', 'required_if:refund_type,partial', 'numeric', 'min:0.01'],
+            'note' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $currency = $request->user()->company->currency;
+        $amount = $data['refund_type'] === 'full'
+            ? (int) $serviceRequest->price_minor
+            : ($data['refund_type'] === 'partial' ? (int) ($this->moneyToMinor($data['refund_amount'] ?? 0, $currency) ?? 0) : null);
+        if ($amount !== null && $amount > (int) $serviceRequest->price_minor) {
+            throw ValidationException::withMessages(['refund_amount' => __('workspace.refund_amount_too_high')]);
+        }
+
+        DB::transaction(function () use ($request, $serviceRequest, $data, $amount): void {
+            $serviceRequest->update([
+                'refund_status' => $data['refund_type'] === 'none' ? null : $data['refund_type'],
+                'refund_amount_minor' => $amount,
+                'refund_requested_at' => $data['refund_type'] === 'none' ? null : ($serviceRequest->refund_requested_at ?? now()),
+                'refunded_at' => $data['refund_type'] === 'none' ? null : now(),
+                'payment_status' => $data['refund_type'] === 'none' ? $serviceRequest->payment_status : 'refunded',
+            ]);
+            $serviceRequest->history()->create([
+                'user_id' => $request->user()->id,
+                'from_status' => $serviceRequest->status->value,
+                'to_status' => $serviceRequest->status->value,
+                'note' => $data['refund_type'] === 'none' ? 'workspace.history_refund_cleared' : ($data['note'] ?? 'workspace.history_refunded'),
+                'created_at' => now(),
+            ]);
+        });
+
+        ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'refund_updated');
+
+        return $this->response($request, __('workspace.refund_updated'));
     }
 
     private function ensureTenant(Request $request, ServiceRequest $item): void

@@ -77,7 +77,7 @@ class OrderController extends Controller
                     ? 'bi-check-lg'
                     : ($order->status === RequestStatus::Cancelled ? 'bi-x-lg' : 'bi-bell'),
                 'requires_confirmation' => in_array($order->status, [RequestStatus::Ready, RequestStatus::WaitingGuest], true),
-                'show_bill' => $order->status === RequestStatus::Completed && $order->payment_status === 'invoiced',
+                'show_bill' => $order->status === RequestStatus::Completed && $order->payment_status === 'invoiced' && ! $order->hasRefund(),
                 'card_html' => view('guest.orders._card', [
                     'company' => $company,
                     'order' => $order,
@@ -156,6 +156,77 @@ class OrderController extends Controller
         return redirect()->route('guest.orders.show', [$company, $order])->with('guest_success', __('guest.order_confirmed'));
     }
 
+    public function cancel(Company $company, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        /** @var GuestSession $stay */
+        $stay = app('guestStay');
+        $this->ensureOrder($company, $serviceRequest, $stay);
+
+        $order = DB::transaction(function () use ($company, $serviceRequest, $stay): ServiceRequest {
+            $order = ServiceRequest::query()->lockForUpdate()->findOrFail($serviceRequest->id);
+            $this->ensureOrder($company, $order, $stay);
+            abort_unless(in_array($order->status, [RequestStatus::New, RequestStatus::Accepted], true), 409);
+            $from = $order->status;
+            $order->update([
+                'status' => RequestStatus::Cancelled,
+                'payment_status' => $order->price_minor > 0 ? 'cancelled' : $order->payment_status,
+            ]);
+            $order->history()->create([
+                'from_status' => $from->value,
+                'to_status' => RequestStatus::Cancelled->value,
+                'note' => 'workspace.history_guest_cancelled',
+                'created_at' => now(),
+            ]);
+
+            return $order;
+        });
+        $this->notifyGuestAction($company, $order, 'workspace.notification_guest_cancelled', 'workspace.notification_guest_cancelled_body', 'bi-x-circle');
+
+        return back()->with('guest_success', __('guest.order_cancelled'));
+    }
+
+    public function clarification(Company $company, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        /** @var GuestSession $stay */
+        $stay = app('guestStay');
+        $this->ensureOrder($company, $serviceRequest, $stay);
+        abort_unless(in_array($serviceRequest->status, [RequestStatus::InProgress, RequestStatus::WaitingGuest, RequestStatus::Ready], true), 409);
+        if (! $serviceRequest->clarification_requested_at) {
+            $serviceRequest->update(['clarification_requested_at' => now()]);
+            $serviceRequest->history()->create([
+                'from_status' => $serviceRequest->status->value,
+                'to_status' => $serviceRequest->status->value,
+                'note' => 'workspace.history_clarification_requested',
+                'created_at' => now(),
+            ]);
+            $this->notifyGuestAction($company, $serviceRequest, 'workspace.notification_clarification', 'workspace.notification_clarification_body', 'bi-exclamation-triangle');
+        }
+
+        return back()->with('guest_success', __('guest.clarification_sent'));
+    }
+
+    public function requestRefund(Request $request, Company $company, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        /** @var GuestSession $stay */
+        $stay = app('guestStay');
+        $this->ensureOrder($company, $serviceRequest, $stay);
+        abort_unless(in_array($serviceRequest->status, [RequestStatus::Ready, RequestStatus::Completed], true) && $serviceRequest->price_minor > 0, 409);
+        $data = $request->validate(['refund_type' => ['required', Rule::in(['partial', 'full'])]]);
+        $serviceRequest->update([
+            'refund_status' => 'requested_'.$data['refund_type'],
+            'refund_requested_at' => now(),
+        ]);
+        $serviceRequest->history()->create([
+            'from_status' => $serviceRequest->status->value,
+            'to_status' => $serviceRequest->status->value,
+            'note' => 'workspace.history_refund_requested_'.$data['refund_type'],
+            'created_at' => now(),
+        ]);
+        $this->notifyGuestAction($company, $serviceRequest, 'workspace.notification_refund_requested', 'workspace.notification_refund_requested_body', 'bi-arrow-counterclockwise');
+
+        return back()->with('guest_success', __('guest.refund_requested'));
+    }
+
     public function bill(Company $company): View
     {
         /** @var GuestSession $stay */
@@ -164,6 +235,7 @@ class OrderController extends Controller
             ->where('payment_method', 'room_charge')
             ->where('payment_status', 'invoiced')
             ->where('status', '!=', RequestStatus::Cancelled)
+            ->whereNull('refund_status')
             ->with('items.service')
             ->oldest()
             ->get();
@@ -193,5 +265,22 @@ class OrderController extends Controller
             RequestStatus::Completed => __('guest.completed_hint'),
             RequestStatus::Cancelled => __('guest.cancelled_hint'),
         };
+    }
+
+    private function notifyGuestAction(Company $company, ServiceRequest $order, string $titleKey, string $bodyKey, string $icon): void
+    {
+        User::where('company_id', $company->id)->where('is_active', true)->get()->each->notify(
+            new WorkspaceNotification([
+                'title_key' => $titleKey,
+                'body_key' => $bodyKey,
+                'params' => ['room' => $order->roomDisplayLabel(), 'request' => $order->title],
+                'request_id' => $order->id,
+                'url' => route('workspace.requests.show', $order),
+                'icon' => $icon,
+                'email' => true,
+                'push' => true,
+            ])
+        );
+        ServiceRequestChanged::dispatch($order->fresh(), 'guest_action');
     }
 }

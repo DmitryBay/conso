@@ -6,12 +6,18 @@
     <form class="d-flex gap-2 flex-wrap" method="GET">
         <label class="filter-check"><input type="checkbox" name="mine" value="1" @checked(request()->boolean('mine')) onchange="this.form.submit()"><span><i class="bi bi-person-check me-1"></i>{{ __('workspace.mine_only') }}</span></label>
         <select class="form-select form-select-sm" name="priority" onchange="this.form.submit()"><option value="">{{ __('workspace.all_priorities') }}</option>@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected(request('priority')===$priority->value)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select>
-        @if(request()->hasAny(['mine','priority']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index') }}">{{ __('workspace.reset') }}</a>@endif
+        <select class="form-select form-select-sm" name="guest_stay_id" onchange="this.form.submit()"><option value="">{{ __('workspace.all_clients') }}</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected((int)request('guest_stay_id')===$client->id)>{{ $client->guest_name }} · {{ $client->room->displayName() }}</option>@endforeach</select>
+        <input class="form-control form-control-sm" style="max-width:180px" name="guest_name" value="{{ request('guest_name') }}" placeholder="{{ __('workspace.client_name_filter') }}">
+        <label class="filter-check"><input type="checkbox" name="refund" value="1" @checked(request()->boolean('refund')) onchange="this.form.submit()"><span><i class="bi bi-arrow-counterclockwise me-1"></i>{{ __('workspace.with_refund') }}</span></label>
+        <label class="filter-check"><input type="checkbox" name="cancelled" value="1" @checked(request()->boolean('cancelled')) onchange="this.form.submit()"><span><i class="bi bi-x-circle me-1"></i>{{ __('workspace.cancelled_filter') }}</span></label>
+        <label class="filter-check"><input type="checkbox" name="archive" value="1" @checked(request()->boolean('archive')) onchange="this.form.submit()"><span><i class="bi bi-archive me-1"></i>{{ __('workspace.archive') }}</span></label>
+        <label class="filter-check"><input type="checkbox" name="all_stays" value="1" @checked(request()->boolean('all_stays')) onchange="this.form.submit()"><span>{{ __('workspace.all_stays_filter') }}</span></label>
+        @if(request()->hasAny(['mine','priority','guest_stay_id','guest_name','refund','cancelled','archive','all_stays']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index') }}">{{ __('workspace.reset') }}</a>@endif
     </form>
     <div class="text-secondary d-none d-md-block" style="font-size:11px"><i class="bi bi-arrows-move me-1"></i>{{ __('workspace.drag_hint') }}</div>
 </div>
 <div class="kanban-board">
-@foreach(\App\Enums\RequestStatus::kanban() as $status)
+@foreach(request()->boolean('cancelled') ? [\App\Enums\RequestStatus::Cancelled] : \App\Enums\RequestStatus::kanban() as $status)
 @php($column=$requests[$status->value] ?? collect())
 <section class="kanban-column" data-kanban-column data-status="{{ $status->value }}"><header class="kanban-column-header"><div class="d-flex align-items-center gap-2"><span class="column-dot bg-{{ $status->color() }}"></span><h2>{{ __('workspace.status.'.$status->value) }}</h2><span class="column-count">{{ $column->count() }}</span></div>@if($status===\App\Enums\RequestStatus::New)<button class="btn btn-link text-secondary p-0" data-bs-toggle="modal" data-bs-target="#newRequestModal"><i class="bi bi-plus-lg"></i></button>@endif</header><div class="kanban-cards">@forelse($column as $item)@include('workspace.requests._card',['item'=>$item])@empty<div class="kanban-empty"><i class="bi bi-inbox"></i><span>{{ __('workspace.no_requests') }}</span></div>@endforelse</div></section>
 @endforeach

@@ -61,9 +61,9 @@
                     <div class="occupancy-row-label"><strong>{{ $row['room']->displayLabel() }}</strong></div>
                     @foreach($row['cells'] as $index => $cell)
                         @php($day=$calendar['days'][$index])
-                        <div class="occupancy-cell {{ $cell['occupied'] ? 'is-occupied' : 'is-free' }} {{ $day['date']->isWeekend() ? 'is-weekend' : '' }} {{ $day['date']->isToday() ? 'is-today' : '' }}" title="{{ $cell['label'] ?: __('workspace.free_on_date',['date'=>$day['date']->format('d.m.Y')]) }}">
+                        <{{ $cell['occupied'] ? 'a' : 'div' }} class="occupancy-cell {{ $cell['occupied'] ? 'is-occupied' : 'is-free' }} {{ $day['date']->isWeekend() ? 'is-weekend' : '' }} {{ $day['date']->isToday() ? 'is-today' : '' }}" @if($cell['occupied']) href="{{ route('workspace.stays.show',$cell['stay_id']) }}" @endif title="{{ $cell['label'] ?: __('workspace.free_on_date',['date'=>$day['date']->format('d.m.Y')]) }}">
                             @if($cell['occupied'])<span>{{ mb_strtoupper(mb_substr($cell['guest'] ?: '•',0,1)) }}</span>@endif
-                        </div>
+                        </{{ $cell['occupied'] ? 'a' : 'div' }}>
                     @endforeach
                 </div>
                 @endif
@@ -109,7 +109,7 @@
     <td class="small"><div>{{ $stay->check_in_at->setTimezone($currentCompany->timezone)->format('d.m.Y H:i') }}</div><div class="text-secondary">{{ $stay->check_out_at->setTimezone($currentCompany->timezone)->format('d.m.Y H:i') }}</div></td>
     <td class="small fw-semibold">{{ $stay->nights }}</td>
     <td><span class="badge-soft-{{ $stay->status->color() }}">{{ __('workspace.stay_status.'.$stay->status->value) }}</span></td>
-    <td class="small fw-semibold">{{ $money->format((int)$stay->requests->where('payment_method','room_charge')->where('payment_status','invoiced')->where('status','!=',\App\Enums\RequestStatus::Cancelled)->sum('price_minor'),$currentCompany->currency) }}</td>
+    <td class="small fw-semibold">{{ $money->format((int)$stay->requests->where('payment_method','room_charge')->whereIn('payment_status',['pending','invoiced'])->whereNull('refund_status')->where('status','!=',\App\Enums\RequestStatus::Cancelled)->sum('price_minor'),$currentCompany->currency) }}</td>
     <td><div class="d-flex gap-1"><a class="btn btn-light btn-sm" href="{{ route('workspace.stays.show',$stay) }}" title="{{ __('workspace.open_client_card') }}"><i class="bi bi-person-vcard"></i></a>@if(in_array($stay->status,[\App\Enums\GuestStayStatus::Upcoming,\App\Enums\GuestStayStatus::CheckedIn],true))<div class="dropdown"><button class="btn btn-light btn-sm" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button><div class="dropdown-menu dropdown-menu-end p-2 stay-actions">
         <form class="d-flex gap-2 mb-2" method="POST" action="{{ route('workspace.stays.pin',$stay) }}">@csrf @method('PATCH')<input class="form-control form-control-sm" name="access_pin" inputmode="numeric" maxlength="8" placeholder="{{ __('workspace.new_pin_auto') }}"><button class="btn btn-light btn-sm text-nowrap">{{ $stay->access_pin ? __('workspace.change_pin') : __('workspace.set_pin') }}</button></form>
         <form class="d-flex gap-2 mb-2" method="POST" action="{{ route('workspace.stays.extend',$stay) }}">@csrf @method('PATCH')<select class="form-select form-select-sm" name="extra_nights">@foreach([1,2,3,7] as $days)<option value="{{ $days }}">+{{ $days }} {{ __('workspace.nights_short') }}</option>@endforeach</select><button class="btn btn-light btn-sm">{{ __('workspace.extend') }}</button></form>

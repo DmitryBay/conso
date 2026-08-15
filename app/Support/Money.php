@@ -15,6 +15,7 @@ class Money
         return match ($currency) {
             'USD' => '$'.number_format($amount, 2, '.', ','),
             'EUR' => '€'.number_format($amount, 2, '.', ','),
+            'AUD' => 'A$'.number_format($amount, 2, '.', ','),
             'GBP' => '£'.number_format($amount, 2, '.', ','),
             'AED' => 'AED '.number_format($amount, 2, '.', ','),
             'CNY' => '¥'.number_format($amount, 2, '.', ','),

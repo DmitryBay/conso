@@ -20,7 +20,7 @@ class StoreCompanyRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:40'],
             'timezone' => ['required', 'timezone'],
-            'currency' => ['required', Rule::in(['IDR', 'USD', 'EUR', 'RUB'])],
+            'currency' => ['required', Rule::in(['IDR', 'USD', 'EUR', 'AUD'])],
             'status' => ['required', Rule::in(['trial', 'active', 'suspended'])],
             'plan' => ['required', 'string', 'max:50'],
             'rooms_count' => ['required', 'integer', 'min:0', 'max:65000'],
