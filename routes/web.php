@@ -15,6 +15,7 @@ use App\Http\Controllers\Guest\OrderController as GuestOrderController;
 use App\Http\Controllers\Workspace\BackgroundLibraryController;
 use App\Http\Controllers\Workspace\DashboardController as WorkspaceDashboardController;
 use App\Http\Controllers\Workspace\GuestStayController;
+use App\Http\Controllers\Workspace\ManagerActionLogController;
 use App\Http\Controllers\Workspace\NotificationController;
 use App\Http\Controllers\Workspace\PushSubscriptionController;
 use App\Http\Controllers\Workspace\RoomController;
@@ -81,7 +82,7 @@ Route::prefix('platform')->name('platform.')->middleware(['auth', 'role:super_ad
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
-Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:company_owner,manager', 'company', 'workspace.locale'])->group(function () {
+Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:company_owner,manager', 'company', 'workspace.locale', 'manager.audit'])->group(function () {
     Route::get('/', WorkspaceDashboardController::class)->name('dashboard');
 
     Route::get('requests', [ServiceRequestController::class, 'index'])->name('requests.index');
@@ -120,6 +121,7 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test'])->name('push-subscriptions.test');
 
     Route::middleware('role:company_owner')->group(function () {
+        Route::get('manager-actions', [ManagerActionLogController::class, 'index'])->name('manager-actions.index');
         Route::get('rooms', [RoomController::class, 'index'])->name('rooms.index');
         Route::post('rooms', [RoomController::class, 'store'])->name('rooms.store');
         Route::put('rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');

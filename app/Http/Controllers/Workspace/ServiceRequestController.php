@@ -113,6 +113,7 @@ class ServiceRequestController extends Controller
             'request' => $serviceRequest->title,
         ]);
         ServiceRequestChanged::dispatch($serviceRequest, 'created');
+        $request->attributes->set('audit_service_request_id', $serviceRequest->id);
 
         return back()->with('success', __('workspace.request_added'));
     }

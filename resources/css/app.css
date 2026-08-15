@@ -148,8 +148,16 @@ a { text-decoration: none; }
 .builder-tips li { margin-bottom:11px; padding-left:4px; }
 
 /* Kanban */
-.kanban-toolbar { align-items:center; display:flex; justify-content:space-between; margin-bottom:16px; padding:12px 14px; }
-.kanban-toolbar .form-select { min-height:36px; width:auto; }
+.kanban-toolbar { align-items:flex-start; display:flex; gap:18px; justify-content:space-between; margin-bottom:16px; padding:12px 14px; }
+.kanban-toolbar .form-select { min-height:36px; }
+.kanban-filter-form { display:flex; flex:1; flex-direction:column; gap:8px; min-width:0; }
+.kanban-filter-fields,.kanban-filter-toggles { align-items:center; display:flex; gap:8px; min-height:36px; }
+.kanban-filter-fields { flex-wrap:nowrap; }
+.kanban-filter-toggles { flex-wrap:wrap; }
+.kanban-filter-fields .priority-filter { min-width:190px; width:190px; }
+.kanban-filter-fields .client-filter { flex:0 1 240px; min-width:200px; width:240px; }
+.kanban-filter-fields .client-name-filter { flex:1 1 200px; min-height:36px; min-width:160px; width:200px; }
+.kanban-filter-toggles .btn,.kanban-filter-toggles .filter-check span { min-height:36px; }
 .filter-check input { display:none; }
 .filter-check span { border:1px solid var(--hc-border); border-radius:9px; cursor:pointer; display:inline-block; font-size:11px; font-weight:650; padding:8px 11px; }
 .filter-check input:checked + span { background:var(--hc-navy); border-color:var(--hc-navy); color:#fff; }
@@ -822,11 +830,17 @@ a { text-decoration: none; }
 /* Room inventory */
 .room-inventory-list { display:flex; flex-direction:column; gap:12px; }
 .room-inventory-row { align-items:end; display:grid; gap:14px; grid-template-columns:auto minmax(120px,.65fr) minmax(180px,1.15fr) minmax(100px,.5fr) minmax(135px,.6fr) auto; padding:18px; }
+.room-field-with-hint { position:relative; }
+.room-floating-hint { left:0; margin-top:4px; position:absolute; top:100%; white-space:normal; z-index:1; }
 .room-inventory-icon { align-items:center; align-self:center; background:#e7f0ec; border-radius:12px; color:#2f705e; display:flex; font-size:18px; height:42px; justify-content:center; width:42px; }
 .room-active-toggle { align-self:center; cursor:pointer; display:grid; grid-template-columns:auto 1fr; column-gap:8px; }
 .room-active-toggle input { accent-color:#286b59; margin-top:3px; }
 .room-active-toggle span { font-size:11px; font-weight:750; }
 .room-active-toggle small { color:#7a8783; font-size:9px; grid-column:2; }
+.audit-filter { align-items:center; display:flex; gap:10px; padding:12px 14px; }
+.audit-filter .form-select { max-width:260px; }
+.audit-request-filter { align-items:center; background:#edf3f0; border-radius:9px; color:#42665d; display:inline-flex; font-size:11px; font-weight:650; gap:7px; padding:8px 11px; }
+.audit-meta { display:block; margin-bottom:3px; }
 
 /* Occupancy calendar */
 .occupancy-card { overflow:hidden; }
@@ -953,6 +967,8 @@ a { text-decoration: none; }
 }
 
 @media (max-width:767.98px) {
+    .kanban-filter-fields { align-items:stretch; flex-wrap:wrap; }
+    .kanban-filter-fields .priority-filter,.kanban-filter-fields .client-filter,.kanban-filter-fields .client-name-filter { flex:1 1 100%; width:100%; }
     .client-card-heading { align-items:flex-start; flex-direction:column; }
     .client-card-layout { grid-template-columns:1fr; }
     .client-bill-picker { position:static!important; }

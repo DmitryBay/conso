@@ -3,16 +3,20 @@
 @section('content')
 <div class="d-flex align-items-end justify-content-between gap-3 mb-3"><div><div class="eyebrow">{{ __('workspace.service_shift') }}</div><h1 class="page-title">{{ __('workspace.guest_requests') }}</h1><p class="page-subtitle">{{ __('workspace.kanban_intro') }}</p></div><div class="page-actions"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal"><i class="bi bi-plus-lg me-sm-2"></i><span>{{ __('workspace.new_request') }}</span></button></div></div>
 <div class="kanban-toolbar surface-card">
-    <form class="d-flex gap-2 flex-wrap" method="GET">
-        <label class="filter-check"><input type="checkbox" name="mine" value="1" @checked(request()->boolean('mine')) onchange="this.form.submit()"><span><i class="bi bi-person-check me-1"></i>{{ __('workspace.mine_only') }}</span></label>
-        <select class="form-select form-select-sm" name="priority" onchange="this.form.submit()"><option value="">{{ __('workspace.all_priorities') }}</option>@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected(request('priority')===$priority->value)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select>
-        <select class="form-select form-select-sm" name="guest_stay_id" onchange="this.form.submit()"><option value="">{{ __('workspace.all_clients') }}</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected((int)request('guest_stay_id')===$client->id)>{{ $client->guest_name }} · {{ $client->room->displayName() }}</option>@endforeach</select>
-        <input class="form-control form-control-sm" style="max-width:180px" name="guest_name" value="{{ request('guest_name') }}" placeholder="{{ __('workspace.client_name_filter') }}">
-        <label class="filter-check"><input type="checkbox" name="refund" value="1" @checked(request()->boolean('refund')) onchange="this.form.submit()"><span><i class="bi bi-arrow-counterclockwise me-1"></i>{{ __('workspace.with_refund') }}</span></label>
-        <label class="filter-check"><input type="checkbox" name="cancelled" value="1" @checked(request()->boolean('cancelled')) onchange="this.form.submit()"><span><i class="bi bi-x-circle me-1"></i>{{ __('workspace.cancelled_filter') }}</span></label>
-        <label class="filter-check"><input type="checkbox" name="archive" value="1" @checked(request()->boolean('archive')) onchange="this.form.submit()"><span><i class="bi bi-archive me-1"></i>{{ __('workspace.archive') }}</span></label>
-        <label class="filter-check"><input type="checkbox" name="all_stays" value="1" @checked(request()->boolean('all_stays')) onchange="this.form.submit()"><span>{{ __('workspace.all_stays_filter') }}</span></label>
-        @if(request()->hasAny(['mine','priority','guest_stay_id','guest_name','refund','cancelled','archive','all_stays']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index') }}">{{ __('workspace.reset') }}</a>@endif
+    <form class="kanban-filter-form" method="GET">
+        <div class="kanban-filter-fields">
+            <select class="form-select form-select-sm priority-filter" name="priority" onchange="this.form.submit()"><option value="">{{ __('workspace.all_priorities') }}</option>@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected(request('priority')===$priority->value)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select>
+            <select class="form-select form-select-sm client-filter" name="guest_stay_id" onchange="this.form.submit()"><option value="">{{ __('workspace.all_clients') }}</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected((int)request('guest_stay_id')===$client->id)>{{ $client->guest_name }} · {{ $client->room->displayName() }}</option>@endforeach</select>
+            <input class="form-control form-control-sm client-name-filter" name="guest_name" value="{{ request('guest_name') }}" placeholder="{{ __('workspace.client_name_filter') }}">
+        </div>
+        <div class="kanban-filter-toggles">
+            <label class="filter-check"><input type="checkbox" name="mine" value="1" @checked(request()->boolean('mine')) onchange="this.form.submit()"><span><i class="bi bi-person-check me-1"></i>{{ __('workspace.mine_only') }}</span></label>
+            <label class="filter-check"><input type="checkbox" name="refund" value="1" @checked(request()->boolean('refund')) onchange="this.form.submit()"><span><i class="bi bi-arrow-counterclockwise me-1"></i>{{ __('workspace.with_refund') }}</span></label>
+            <label class="filter-check"><input type="checkbox" name="cancelled" value="1" @checked(request()->boolean('cancelled')) onchange="this.form.submit()"><span><i class="bi bi-x-circle me-1"></i>{{ __('workspace.cancelled_filter') }}</span></label>
+            <label class="filter-check"><input type="checkbox" name="archive" value="1" @checked(request()->boolean('archive')) onchange="this.form.submit()"><span><i class="bi bi-archive me-1"></i>{{ __('workspace.archive') }}</span></label>
+            <label class="filter-check"><input type="checkbox" name="all_stays" value="1" @checked(request()->boolean('all_stays')) onchange="this.form.submit()"><span>{{ __('workspace.all_stays_filter') }}</span></label>
+            @if(request()->hasAny(['mine','priority','guest_stay_id','guest_name','refund','cancelled','archive','all_stays']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index') }}">{{ __('workspace.reset') }}</a>@endif
+        </div>
     </form>
     <div class="text-secondary d-none d-md-block" style="font-size:11px"><i class="bi bi-arrows-move me-1"></i>{{ __('workspace.drag_hint') }}</div>
 </div>
@@ -103,6 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalBody.addEventListener('click', event => {
         if (event.target.closest('[data-request-retry]') && currentUrl) loadRequest(currentUrl);
+    });
+
+    modalBody.addEventListener('change', event => {
+        const type = event.target.closest('[data-refund-type]');
+        if (!type) return;
+        const form = type.closest('[data-refund-form]');
+        const amount = form.querySelector('[data-refund-amount]');
+        if (type.value === 'full') amount.value = form.dataset.serviceAmount;
+        if (type.value === 'none') amount.value = '';
+        amount.readOnly = type.value === 'full';
+        amount.disabled = type.value === 'none';
     });
 
     modalBody.addEventListener('submit', async event => {
