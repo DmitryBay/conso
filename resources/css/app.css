@@ -878,26 +878,26 @@ a { text-decoration: none; }
 .occupancy-cell.is-occupied { background:#d8e9e1; }
 .occupancy-cell.is-occupied:hover { background:#c7dfd4; }
 .occupancy-cell.is-occupied span { align-items:center; border:1px solid rgb(255 255 255 / 68%); border-radius:50%; box-shadow:0 1px 2px rgb(37 55 49 / 12%); display:flex; font-size:7px; font-weight:800; height:18px; justify-content:center; width:18px; }
-.guest-color-0 { background:#f3d8d3; color:#6c3731; }
-.guest-color-1 { background:#f3e0cf; color:#69452b; }
-.guest-color-2 { background:#eee4c9; color:#5d4d23; }
-.guest-color-3 { background:#e3e7cc; color:#465326; }
-.guest-color-4 { background:#d8e8d2; color:#315631; }
-.guest-color-5 { background:#cfe7da; color:#285740; }
-.guest-color-6 { background:#cee7e2; color:#245650; }
-.guest-color-7 { background:#d1e5ea; color:#285360; }
-.guest-color-8 { background:#d7e2f0; color:#304f73; }
-.guest-color-9 { background:#dde0f1; color:#444b74; }
-.guest-color-10 { background:#e3dcf0; color:#554171; }
-.guest-color-11 { background:#ecd9eb; color:#633d61; }
-.guest-color-12 { background:#f0d8e2; color:#6a3d51; }
-.guest-color-13 { background:#ead9d5; color:#64423b; }
-.guest-color-14 { background:#d9e1df; color:#39524c; }
-.guest-color-15 { background:#e2e0d7; color:#504c41; }
-.guest-color-16 { background:#d8e0e9; color:#3a4f65; }
-.guest-color-17 { background:#e8dccf; color:#60462f; }
-.guest-color-18 { background:#dce7d5; color:#3d5732; }
-.guest-color-19 { background:#e7dde2; color:#58454f; }
+.guest-color-0 { background:#7a4e48; color:#fff; }
+.guest-color-1 { background:#765538; color:#fff; }
+.guest-color-2 { background:#6d5f35; color:#fff; }
+.guest-color-3 { background:#56613d; color:#fff; }
+.guest-color-4 { background:#3f6646; color:#fff; }
+.guest-color-5 { background:#356657; color:#fff; }
+.guest-color-6 { background:#31645f; color:#fff; }
+.guest-color-7 { background:#35606b; color:#fff; }
+.guest-color-8 { background:#425d78; color:#fff; }
+.guest-color-9 { background:#505a7a; color:#fff; }
+.guest-color-10 { background:#5e5278; color:#fff; }
+.guest-color-11 { background:#704e70; color:#fff; }
+.guest-color-12 { background:#754d60; color:#fff; }
+.guest-color-13 { background:#69534d; color:#fff; }
+.guest-color-14 { background:#48615b; color:#fff; }
+.guest-color-15 { background:#5d5a4d; color:#fff; }
+.guest-color-16 { background:#4c5d70; color:#fff; }
+.guest-color-17 { background:#6b543e; color:#fff; }
+.guest-color-18 { background:#526345; color:#fff; }
+.guest-color-19 { background:#62545b; color:#fff; }
 .occupancy-cell.is-free:hover { background:#eef7f3; }
 .occupancy-empty { color:#73827d; font-size:11px; padding:28px; }
 .occupancy-legend { align-items:center; display:flex; flex-wrap:wrap; gap:14px; padding:12px 24px 16px; }
