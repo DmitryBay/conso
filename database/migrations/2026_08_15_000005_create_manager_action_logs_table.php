@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->timestamp('created_at');
             $table->index(['company_id', 'created_at']);
-            $table->index(['company_id', 'service_request_id', 'created_at']);
+            $table->index(['company_id', 'service_request_id', 'created_at'], 'manager_logs_request_created_idx');
         });
     }
 
