@@ -42,6 +42,7 @@ class PlatformSettingsTest extends TestCase
         $this->actingAs($admin)->put(route('platform.settings.update'), [
             'platform_name' => 'Luma Hotels',
             'support_email' => 'support@luma.dev',
+            'system_email' => 'system@luma.dev',
             'default_trial_days' => 30,
             'default_timezone' => 'Asia/Makassar',
             'default_currency' => 'IDR',
@@ -50,6 +51,7 @@ class PlatformSettingsTest extends TestCase
         ])->assertRedirect()->assertSessionHas('success');
 
         $this->assertSame('Luma Hotels', PlatformSetting::read('platform_name'));
+        $this->assertSame('system@luma.dev', PlatformSetting::read('system_email'));
         $this->assertSame('30', PlatformSetting::read('default_trial_days'));
         $this->assertTrue(PlatformSetting::enabled('email_notifications_enabled'));
         $this->assertFalse(PlatformSetting::enabled('push_notifications_enabled'));

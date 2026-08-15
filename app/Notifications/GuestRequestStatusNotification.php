@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\GuestSession;
 use App\Models\PlatformSetting;
 use App\Models\ServiceRequest;
+use App\Support\SystemMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -40,6 +41,7 @@ class GuestRequestStatusNotification extends Notification
         $params = $this->params($locale);
 
         return (new MailMessage)
+            ->from(SystemMail::address(), SystemMail::name())
             ->subject(trans('guest.notification_status_title', $params, $locale).' · '.$this->serviceRequest->company->name)
             ->greeting(trans('guest.notification_email_greeting', ['name' => $notifiable->guest_name ?: trans('guest.guest', [], $locale)], $locale))
             ->line(trans('guest.notification_status_body', $params, $locale))

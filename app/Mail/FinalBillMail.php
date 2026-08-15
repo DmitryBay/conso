@@ -3,8 +3,10 @@
 namespace App\Mail;
 
 use App\Models\GuestStay;
+use App\Support\SystemMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -22,7 +24,10 @@ class FinalBillMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Final bill - '.$this->guestStay->company->name);
+        return new Envelope(
+            from: new Address(SystemMail::address(), SystemMail::name()),
+            subject: 'Final bill - '.$this->guestStay->company->name,
+        );
     }
 
     public function content(): Content

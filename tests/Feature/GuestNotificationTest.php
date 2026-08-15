@@ -11,6 +11,7 @@ use App\Enums\UserRole;
 use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\GuestStay;
+use App\Models\PlatformSetting;
 use App\Models\Room;
 use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
@@ -103,6 +104,7 @@ class GuestNotificationTest extends TestCase
     public function test_status_change_notifies_the_guest_by_push_and_email(): void
     {
         Notification::fake();
+        PlatformSetting::write('system_email', 'system@luma.test');
         [$company, $room, $stay, $manager] = $this->hotel();
         $stay->update(['guest_email' => 'anna@example.com']);
         $session = $this->guestSession($company, $room, $stay, 'id');
@@ -138,6 +140,7 @@ class GuestNotificationTest extends TestCase
         );
 
         $mail = (new GuestRequestStatusNotification($serviceRequest->fresh()->load(['company', 'service']), true))->toMail($session->fresh()->load('stay'));
+        $this->assertSame(['system@luma.test', config('mail.from.name')], $mail->from);
         $this->assertSame('Permintaan: Sedang diproses · '.$company->name, $mail->subject);
         $this->assertSame('Buka permintaan', $mail->actionText);
 

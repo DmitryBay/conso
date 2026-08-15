@@ -10,6 +10,7 @@ use App\Mail\FinalBillMail;
 use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\GuestStay;
+use App\Models\PlatformSetting;
 use App\Models\Room;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -280,6 +281,7 @@ class GuestStayManagementTest extends TestCase
     public function test_manager_can_email_final_unpaid_bill_with_additional_description(): void
     {
         Mail::fake();
+        PlatformSetting::write('system_email', 'system@luma.test');
         [$company, $room, $manager] = $this->hotel();
         $stay = GuestStay::create([
             'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
@@ -298,6 +300,7 @@ class GuestStayManagementTest extends TestCase
         ])->assertRedirect()->assertSessionHas('success');
 
         Mail::assertSent(FinalBillMail::class, fn (FinalBillMail $mail) => $mail->hasTo('anna@example.com')
+            && $mail->hasFrom('system@luma.test')
             && collect($mail->attachments())->pluck('as')->contains('final-bill.pdf')
             && collect($mail->attachments())->pluck('as')->contains('additional-services.txt'));
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Support\SystemMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -22,7 +23,7 @@ class SystemController extends Controller
 
         $checks = [
             ['База данных', $databaseOk, $databaseOk ? 'Соединение работает' : 'Нет соединения'],
-            ['Email', filled(config('mail.mailers.smtp.username')), filled(config('mail.mailers.smtp.username')) ? config('mail.from.address') : 'SMTP не настроен'],
+            ['Email', filled(config('mail.mailers.smtp.username')), filled(config('mail.mailers.smtp.username')) ? SystemMail::address() : 'SMTP не настроен · отправитель '.SystemMail::address()],
             ['Push', filled(config('webpush.vapid.public_key')) && filled(config('webpush.vapid.private_key')), filled(config('webpush.vapid.public_key')) ? 'VAPID настроен' : 'Ключи отсутствуют'],
             ['Realtime', filled(config('broadcasting.connections.pusher.key')), filled(config('broadcasting.connections.pusher.key')) ? 'Pusher подключён' : 'Pusher не настроен'],
             ['Хранилище', is_writable(storage_path()), is_writable(storage_path()) ? 'Доступно для записи' : 'Нет доступа на запись'],
