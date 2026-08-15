@@ -70,7 +70,7 @@ document.querySelectorAll('[data-guest-menu]').forEach(menu => {
     const goTo = index => {
         const target = pages[Math.max(0, Math.min(index, pages.length - 1))];
         if (!target) return;
-        track.scrollTo({ top: target.offsetTop - pages[0].offsetTop, behavior: 'smooth' });
+        track.scrollTo({ left: target.offsetLeft - pages[0].offsetLeft, behavior: 'smooth' });
         update(pages.indexOf(target));
     };
 
@@ -81,12 +81,12 @@ document.querySelectorAll('[data-guest-menu]').forEach(menu => {
         cancelAnimationFrame(scrollFrame);
         scrollFrame = requestAnimationFrame(() => {
             const closest = pages.reduce((best, page, index) => (
-                Math.abs(page.offsetTop - pages[0].offsetTop - track.scrollTop) < Math.abs(pages[best].offsetTop - pages[0].offsetTop - track.scrollTop) ? index : best
+                Math.abs(page.offsetLeft - pages[0].offsetLeft - track.scrollLeft) < Math.abs(pages[best].offsetLeft - pages[0].offsetLeft - track.scrollLeft) ? index : best
             ), 0);
             update(closest);
         });
     }, { passive: true });
-    window.addEventListener('resize', () => track.scrollTo({ top: (pages[activePage]?.offsetTop ?? pages[0].offsetTop) - pages[0].offsetTop }));
+    window.addEventListener('resize', () => track.scrollTo({ left: (pages[activePage]?.offsetLeft ?? pages[0].offsetLeft) - pages[0].offsetLeft }));
     update(0);
 });
 
