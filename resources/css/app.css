@@ -829,9 +829,9 @@ a { text-decoration: none; }
 
 /* Room inventory */
 .room-inventory-list { display:flex; flex-direction:column; gap:12px; }
-.room-inventory-row { align-items:end; display:grid; gap:14px; grid-template-columns:auto minmax(120px,.65fr) minmax(180px,1.15fr) minmax(100px,.5fr) minmax(135px,.6fr) auto; padding:18px; }
+.room-inventory-row { align-items:end; display:grid; gap:14px; grid-template-columns:auto minmax(120px,.65fr) minmax(180px,1.15fr) minmax(100px,.5fr) minmax(135px,.6fr) auto; padding:18px 18px 32px; }
 .room-field-with-hint { position:relative; }
-.room-floating-hint { left:0; margin-top:4px; position:absolute; top:100%; white-space:normal; z-index:1; }
+.room-floating-hint { inset-inline:0; line-height:1.25; margin:0; position:absolute; text-align:start; top:calc(100% + 6px); white-space:normal; z-index:1; }
 .room-inventory-icon { align-items:center; align-self:center; background:#e7f0ec; border-radius:12px; color:#2f705e; display:flex; font-size:18px; height:42px; justify-content:center; width:42px; }
 .room-active-toggle { align-self:center; cursor:pointer; display:grid; grid-template-columns:auto 1fr; column-gap:8px; }
 .room-active-toggle input { accent-color:#286b59; margin-top:3px; }
@@ -926,6 +926,14 @@ a { text-decoration: none; }
 .bill-selection-total { align-items:center; display:flex; justify-content:space-between; padding:18px 2px; }
 .bill-selection-total span { color:#73827d; font-size:10px; }
 .bill-selection-total strong { font-size:17px; }
+.price-adjustment-service { align-items:center; background:#f3f7f5; border:1px solid var(--hc-border); border-radius:10px; color:var(--hc-ink); display:flex; font-size:11px; gap:8px; min-height:40px; padding:9px 11px; }
+.price-adjustment-service i { color:#32705e; }
+.price-adjustment-history { border-top:1px solid var(--hc-border); display:flex; flex-direction:column; gap:10px; margin-top:16px; padding-top:14px; }
+.price-adjustment-history > strong { font-size:10px; }
+.price-adjustment-history article { background:#f8faf9; border-left:3px solid #d7a845; border-radius:8px; padding:10px 11px; }
+.price-adjustment-history article > span,.price-adjustment-history article > b { display:block; font-size:10px; }
+.price-adjustment-history article > p { font-size:10px; line-height:1.45; margin:6px 0; white-space:pre-wrap; }
+.price-adjustment-history article > small { color:#7d8a85; font-size:8px; }
 .print-bill-body { background:#edf1ef; color:#1e2c28; font-family:Arial,sans-serif; margin:0; min-height:100vh; padding:40px 20px; }
 .print-bill-actions { display:flex; justify-content:space-between; margin:0 auto 16px; max-width:900px; }
 .print-bill-sheet { background:#fff; box-shadow:0 18px 60px rgba(24,49,45,.12); margin:0 auto; max-width:900px; min-height:1120px; padding:64px; }
@@ -966,6 +974,10 @@ a { text-decoration: none; }
     .room-inventory-row .room-active-toggle { grid-column:2 / 4; }
 }
 
+@media (min-width:768px) and (max-width:1399.98px) {
+    .room-inventory-row { padding-bottom:48px; }
+}
+
 @media (max-width:767.98px) {
     .kanban-filter-fields { align-items:stretch; flex-wrap:wrap; }
     .kanban-filter-fields .priority-filter,.kanban-filter-fields .client-filter,.kanban-filter-fields .client-name-filter { flex:1 1 100%; width:100%; }
@@ -975,7 +987,8 @@ a { text-decoration: none; }
     .print-bill-body { padding:12px; }
     .print-bill-sheet { min-height:0; padding:24px; }
     .print-bill-parties { grid-template-columns:1fr; }
-    .room-inventory-row { align-items:stretch; grid-template-columns:1fr; }
+    .room-inventory-row { align-items:stretch; grid-template-columns:1fr; padding:18px; }
+    .room-floating-hint { margin-top:4px; position:static; }
     .room-inventory-icon { display:none; }
     .room-inventory-row .room-active-toggle { grid-column:auto; }
     .guest-language-button span { display:none; }

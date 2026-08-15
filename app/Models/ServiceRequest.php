@@ -77,6 +77,11 @@ class ServiceRequest extends Model
         return $this->hasMany(ServiceRequestStatusHistory::class)->latest('created_at');
     }
 
+    public function priceAdjustments(): HasMany
+    {
+        return $this->hasMany(ServiceRequestPriceAdjustment::class)->latest('created_at');
+    }
+
     public function isOverdue(): bool
     {
         return $this->due_at?->isPast() && ! in_array($this->status, [RequestStatus::Ready, RequestStatus::Completed, RequestStatus::Cancelled], true);

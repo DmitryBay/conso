@@ -92,6 +92,7 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::patch('requests/{serviceRequest}/status', [ServiceRequestController::class, 'status'])->name('requests.status');
     Route::patch('requests/{serviceRequest}/archive', [ServiceRequestController::class, 'archive'])->name('requests.archive');
     Route::patch('requests/{serviceRequest}/refund', [ServiceRequestController::class, 'refund'])->name('requests.refund');
+    Route::patch('requests/{serviceRequest}/price', [ServiceRequestController::class, 'adjustPrice'])->name('requests.price');
 
     Route::get('stays', [GuestStayController::class, 'index'])->name('stays.index');
     Route::get('stays-archive', [GuestStayController::class, 'archive'])->name('stays.archive');

@@ -31,7 +31,7 @@
                 @forelse($orders as $order)
                     <a class="client-order-row" href="{{ route('workspace.requests.show', $order) }}">
                         <span class="client-order-icon"><i class="bi bi-bag-check"></i></span>
-                        <span class="flex-grow-1"><strong>{{ $order->items->first()?->service?->localizedName() ?? $order->title }}</strong><small>#{{ str($order->public_id)->substr(0, 8)->upper() }} · {{ $order->created_at->setTimezone($currentCompany->timezone)->format('d.m.Y H:i') }}</small></span>
+                        <span class="flex-grow-1"><strong>{{ $order->items->first()?->name_snapshot ?? $order->title }}</strong><small>#{{ str($order->public_id)->substr(0, 8)->upper() }} · {{ $order->created_at->setTimezone($currentCompany->timezone)->format('d.m.Y H:i') }}</small></span>
                         <span class="text-end"><span class="badge-soft-{{ $order->status->color() }}">{{ __('workspace.status.'.$order->status->value) }}</span><strong class="client-order-price">{{ $order->price_minor ? $money->format($order->price_minor, $currentCompany->currency) : __('workspace.free') }}</strong></span>
                         <i class="bi bi-chevron-right text-secondary"></i>
                     </a>
@@ -50,7 +50,7 @@
                 <input type="hidden" name="selection" value="1">
                 <div class="bill-service-selection">
                     @forelse($billableOrders as $order)
-                        <label><input type="checkbox" name="order_ids[]" value="{{ $order->id }}" @checked(in_array($order->payment_status,['pending','invoiced'],true))><span><strong>{{ $order->items->first()?->service?->localizedName() ?? $order->title }}</strong><small>{{ $order->created_at->format('d.m.Y') }} · {{ $order->payment_status === 'paid' ? __('workspace.payment_paid') : __('workspace.payment_due') }}</small></span><b>{{ $money->format($order->price_minor, $currentCompany->currency) }}</b></label>
+                        <label><input type="checkbox" name="order_ids[]" value="{{ $order->id }}" @checked(in_array($order->payment_status,['pending','invoiced'],true))><span><strong>{{ $order->items->first()?->name_snapshot ?? $order->title }}</strong><small>{{ $order->created_at->format('d.m.Y') }} · {{ $order->payment_status === 'paid' ? __('workspace.payment_paid') : __('workspace.payment_due') }}</small></span><b>{{ $money->format($order->price_minor, $currentCompany->currency) }}</b></label>
                     @empty
                         <div class="bill-selection-empty"><i class="bi bi-receipt-cutoff"></i><span>{{ __('workspace.no_ordered_services') }}</span></div>
                     @endforelse

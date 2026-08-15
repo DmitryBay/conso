@@ -83,8 +83,12 @@ class ServiceRequestController extends Controller
             ->where('status', 'checked_in')->latest('check_in_at')->first();
         $service = $this->tenantService($companyId, $data['service_node_id'] ?? null);
         $assignee = $this->tenantMember($companyId, $data['assigned_to'] ?? null);
+        $currency = $request->user()->company->currency;
+        $snapshotPrice = filled($data['price'] ?? null)
+            ? (int) ($this->moneyToMinor($data['price'], $currency) ?? 0)
+            : (int) ($service?->price_minor ?? 0);
 
-        $serviceRequest = DB::transaction(function () use ($request, $data, $companyId, $service, $assignee, $guestStay) {
+        $serviceRequest = DB::transaction(function () use ($request, $data, $companyId, $service, $assignee, $guestStay, $snapshotPrice) {
             $item = ServiceRequest::create([
                 ...$data,
                 'public_id' => (string) Str::uuid(),
@@ -96,8 +100,20 @@ class ServiceRequestController extends Controller
                 'source' => 'manual',
                 'status' => $assignee ? RequestStatus::Accepted : RequestStatus::New,
                 'accepted_at' => $assignee ? now() : null,
-                'price_minor' => $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency),
+                'price_minor' => $snapshotPrice,
+                'payment_method' => $guestStay && $snapshotPrice > 0 ? 'room_charge' : null,
+                'payment_status' => $guestStay && $snapshotPrice > 0 ? 'pending' : 'not_required',
             ]);
+            if ($service) {
+                $item->items()->create([
+                    'service_node_id' => $service->id,
+                    'name_snapshot' => $service->name,
+                    'quantity' => 1,
+                    'unit_price_minor' => $snapshotPrice,
+                    'total_price_minor' => $snapshotPrice,
+                    'notes' => $data['description'] ?? null,
+                ]);
+            }
             $item->history()->create([
                 'user_id' => $request->user()->id,
                 'to_status' => $item->status->value,
@@ -121,7 +137,7 @@ class ServiceRequestController extends Controller
     public function show(Request $request, ServiceRequest $serviceRequest): View
     {
         $this->ensureTenant($request, $serviceRequest);
-        $serviceRequest->load(['service', 'assignee', 'creator', 'items', 'guestSession.room', 'guestStay.room', 'history.user']);
+        $serviceRequest->load(['service', 'assignee', 'creator', 'items', 'guestSession.room', 'guestStay.room', 'history.user', 'priceAdjustments.manager']);
         $members = User::where('company_id', $request->user()->company_id)->where('is_active', true)->orderBy('name')->get();
 
         return view('workspace.requests.show', compact('serviceRequest', 'members'));
@@ -246,6 +262,95 @@ class ServiceRequestController extends Controller
         }
 
         return $this->response($request, __($archived ? 'workspace.request_archived' : 'workspace.request_restored'));
+    }
+
+    public function adjustPrice(Request $request, ServiceRequest $serviceRequest): RedirectResponse|JsonResponse
+    {
+        $this->ensureTenant($request, $serviceRequest);
+        $data = $request->validate([
+            'service_request_item_id' => ['nullable', 'integer'],
+            'price' => ['required', 'numeric', 'min:0', 'max:999999999'],
+            'comment' => ['required', 'string', 'max:1000'],
+        ]);
+        $newLinePrice = (int) ($this->moneyToMinor($data['price'], $request->user()->company->currency) ?? 0);
+
+        $updatedRequest = DB::transaction(function () use ($request, $serviceRequest, $data, $newLinePrice): ServiceRequest {
+            $lockedRequest = ServiceRequest::query()->with('items')->lockForUpdate()->findOrFail($serviceRequest->id);
+            abort_unless($lockedRequest->company_id === $request->user()->company_id, 404);
+
+            $item = null;
+            if ($lockedRequest->items->isNotEmpty()) {
+                $itemId = $data['service_request_item_id'] ?? ($lockedRequest->items->count() === 1 ? $lockedRequest->items->first()->id : null);
+                if (! $itemId) {
+                    throw ValidationException::withMessages(['service_request_item_id' => __('workspace.choose_price_service')]);
+                }
+                $item = $lockedRequest->items->firstWhere('id', (int) $itemId);
+                abort_unless($item, 404);
+            }
+
+            $previousLinePrice = (int) ($item?->total_price_minor ?? $lockedRequest->price_minor ?? 0);
+            if ($previousLinePrice === $newLinePrice) {
+                throw ValidationException::withMessages(['price' => __('workspace.price_must_change')]);
+            }
+
+            if ($item) {
+                $item->update([
+                    'unit_price_minor' => (int) round($newLinePrice / max($item->quantity, 1)),
+                    'total_price_minor' => $newLinePrice,
+                ]);
+                $newRequestPrice = (int) $lockedRequest->items()->sum('total_price_minor');
+                $serviceName = $item->name_snapshot;
+            } else {
+                $newRequestPrice = $newLinePrice;
+                $serviceName = $lockedRequest->title;
+            }
+
+            if ($lockedRequest->refund_status === 'partial' && (int) $lockedRequest->refund_amount_minor > $newRequestPrice) {
+                throw ValidationException::withMessages(['price' => __('workspace.price_below_refund')]);
+            }
+
+            $paymentMethod = $lockedRequest->payment_method;
+            if ($newRequestPrice > 0 && ! $paymentMethod && $lockedRequest->guest_stay_id) {
+                $paymentMethod = 'room_charge';
+            }
+            $paymentStatus = match (true) {
+                $lockedRequest->status === RequestStatus::Cancelled => 'cancelled',
+                $newRequestPrice === 0 => 'not_required',
+                $paymentMethod === 'cash' => 'paid',
+                $paymentMethod === 'room_charge' && $lockedRequest->status === RequestStatus::Completed => 'invoiced',
+                $paymentMethod === 'room_charge' => 'pending',
+                default => $lockedRequest->payment_status,
+            };
+
+            $lockedRequest->update([
+                'price_minor' => $newRequestPrice,
+                'payment_method' => $paymentMethod,
+                'payment_status' => $paymentStatus,
+                'refund_amount_minor' => $lockedRequest->refund_status === 'full' ? $newRequestPrice : $lockedRequest->refund_amount_minor,
+            ]);
+            $lockedRequest->priceAdjustments()->create([
+                'service_request_item_id' => $item?->id,
+                'user_id' => $request->user()->id,
+                'service_name_snapshot' => $serviceName,
+                'previous_price_minor' => $previousLinePrice,
+                'new_price_minor' => $newLinePrice,
+                'comment' => $data['comment'],
+                'created_at' => now(),
+            ]);
+            $lockedRequest->history()->create([
+                'user_id' => $request->user()->id,
+                'from_status' => $lockedRequest->status->value,
+                'to_status' => $lockedRequest->status->value,
+                'note' => 'workspace.history_price_adjusted',
+                'created_at' => now(),
+            ]);
+
+            return $lockedRequest;
+        });
+
+        ServiceRequestChanged::dispatch($updatedRequest->fresh(), 'price_adjusted');
+
+        return $this->response($request, __('workspace.price_adjusted'));
     }
 
     public function refund(Request $request, ServiceRequest $serviceRequest): RedirectResponse|JsonResponse

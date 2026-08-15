@@ -110,6 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     modalBody.addEventListener('change', event => {
+        const priceItem = event.target.closest('[data-price-item-select]');
+        if (priceItem) {
+            const form = priceItem.closest('[data-price-adjustment-form]');
+            const price = form?.querySelector('[data-adjusted-price]');
+            if (price) price.value = priceItem.selectedOptions[0]?.dataset.price ?? '';
+            return;
+        }
         const type = event.target.closest('[data-refund-type]');
         if (!type) return;
         const form = type.closest('[data-refund-form]');

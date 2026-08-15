@@ -38,7 +38,8 @@ class LogManagerAction
                 'action' => $routeName,
                 'metadata' => collect($request->only([
                     'status', 'assigned_to', 'refund_type', 'refund_amount', 'archived',
-                    'guest_name', 'room_number', 'service_node_id', 'extra_nights',
+                    'guest_name', 'room_number', 'service_node_id', 'service_request_item_id',
+                    'price', 'comment', 'extra_nights',
                 ]))->reject(fn ($value) => $value === null || $value === '')->all(),
                 'ip_address' => $request->ip(),
                 'created_at' => now(),

@@ -3,6 +3,7 @@
 ## Deployment
 
 - Deployment is already fully configured for this project.
+- After implementing and successfully verifying requested changes, deploy them to production immediately by default; do not wait for a separate «выкладывай» command.
 - When the user says «выкладывай», «на сервер», or otherwise asks to deploy, do not search for deployment configuration and do not ask how to deploy.
 - Treat deployment as the established workflow: verify the requested changes, commit only the relevant project files, and push `main` to `origin`.
 - Production host: `lalo.craabchee.com`. Application path: `/var/www/luma-concierge`.
