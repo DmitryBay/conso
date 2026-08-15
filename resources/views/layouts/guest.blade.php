@@ -44,10 +44,12 @@
     </main>
 
     @if($hasStay)
+        <nav class="guest-tech-nav" aria-label="{{ __('guest.smart_home_title') }}">
+            <a class="{{ request()->routeIs('guest.smart-home') ? 'active' : '' }}" href="{{ route('guest.smart-home', $company) }}"><i class="bi bi-house-gear"></i><span>{{ __('guest.smart_home_title') }}</span></a>
+        </nav>
         <nav class="guest-bottom-nav" aria-label="{{ __('guest.services') }}">
             <a class="{{ request()->routeIs('guest.catalog') || request()->routeIs('guest.orders.create') ? 'active' : '' }}" href="{{ route('guest.catalog', $company) }}"><i class="bi bi-grid"></i><span>{{ __('guest.services') }}</span></a>
             <a class="{{ request()->routeIs('guest.orders.index') || request()->routeIs('guest.orders.show') ? 'active' : '' }}" href="{{ route('guest.orders.index', $company) }}"><i class="bi bi-bell"></i><span>{{ __('guest.orders') }}</span></a>
-            <a class="{{ request()->routeIs('guest.smart-home') ? 'active' : '' }}" href="{{ route('guest.smart-home', $company) }}"><i class="bi bi-house-gear"></i><span>{{ __('guest.smart_home_title') }}</span></a>
             <a class="{{ request()->routeIs('guest.bill') ? 'active' : '' }}" href="{{ route('guest.bill', $company) }}"><i class="bi bi-receipt"></i><span>{{ __('guest.bill') }}</span></a>
         </nav>
         <div class="modal fade guest-notification-modal" id="guestNotificationModal" tabindex="-1" aria-labelledby="guestNotificationTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
