@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['company_id', 'number', 'floor', 'pin_hash', 'is_active'])]
+#[Fillable(['company_id', 'number', 'name', 'floor', 'pin_hash', 'is_active'])]
 class Room extends Model
 {
     use HasFactory;
@@ -31,5 +31,15 @@ class Room extends Model
     public function guestStays(): HasMany
     {
         return $this->hasMany(GuestStay::class);
+    }
+
+    public function displayName(): string
+    {
+        return $this->name ?: $this->number;
+    }
+
+    public function displayLabel(): string
+    {
+        return $this->name ? $this->name.' · '.$this->number : $this->number;
     }
 }

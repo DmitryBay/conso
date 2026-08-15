@@ -24,7 +24,7 @@
             @endforeach
         </div></details></fieldset>
         <label class="guest-label" for="room_number">{{ __('guest.room_number') }}</label>
-        <div class="guest-input-wrap"><i class="bi bi-door-open"></i><input id="room_number" name="room_number" value="{{ old('room_number') }}" placeholder="{{ __('guest.room_example') }}" autocomplete="off" required autofocus></div>
+        <div class="guest-input-wrap"><i class="bi bi-door-open"></i><input id="room_number" name="room_number" value="{{ old('room_number') }}" placeholder="{{ __('guest.room_example') }}" maxlength="160" autocomplete="off" required autofocus></div>
         <label class="guest-label" for="pin">{{ __('guest.pin') }}</label>
         <div class="guest-input-wrap"><i class="bi bi-shield-lock"></i><input id="pin" name="pin" type="password" inputmode="numeric" placeholder="{{ __('guest.pin_hint') }}" maxlength="10" required></div>
         <label class="guest-label" for="guest_name">{{ __('guest.your_name') }} <small>{{ __('guest.optional') }}</small></label>

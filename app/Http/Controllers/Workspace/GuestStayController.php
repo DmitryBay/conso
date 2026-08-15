@@ -19,7 +19,7 @@ class GuestStayController extends Controller
     public function index(Request $request): View
     {
         $companyId = $request->user()->company_id;
-        $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('number')->get();
+        $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
         $stays = GuestStay::where('company_id', $companyId)->with(['room', 'requests'])
             ->latest('check_in_at')->get();
 
@@ -63,7 +63,7 @@ class GuestStayController extends Controller
             'status' => $checkIn->lte(now()) ? GuestStayStatus::CheckedIn : GuestStayStatus::Upcoming,
         ]);
 
-        return back()->with('success', __('workspace.stay_created'))->with('stay_pin', $pin)->with('stay_room', $room->number);
+        return back()->with('success', __('workspace.stay_created'))->with('stay_pin', $pin)->with('stay_room', $room->displayName());
     }
 
     public function extend(Request $request, GuestStay $guestStay): RedirectResponse
@@ -123,7 +123,7 @@ class GuestStayController extends Controller
 
         return back()->with('success', __('workspace.pin_updated'))
             ->with('stay_pin', $pin)
-            ->with('stay_room', $guestStay->room->number);
+            ->with('stay_room', $guestStay->room->displayName());
     }
 
     private function ensureTenant(Request $request, GuestStay $stay): void

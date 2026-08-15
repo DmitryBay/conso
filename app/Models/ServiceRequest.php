@@ -76,4 +76,9 @@ class ServiceRequest extends Model
     {
         return $this->due_at?->isPast() && ! in_array($this->status, [RequestStatus::Ready, RequestStatus::Completed, RequestStatus::Cancelled], true);
     }
+
+    public function roomDisplayName(): string
+    {
+        return $this->guestStay?->room?->displayName() ?? $this->room_number;
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'room_inventory' => 'מלאי חדרים', 'room_inventory_intro' => 'שמות חדרים לאורחים וקודים פנימיים לגישה ולתפעול.', 'add_room' => 'הוספת חדר', 'add_room_hint' => 'הקוד חייב להיות ייחודי. האורח יכול להיכנס גם באמצעות השם.', 'room_code' => 'קוד חדר', 'room_name' => 'שם חדר', 'floor' => 'קומה / אזור', 'room_active' => 'פעיל', 'room_stays_count' => 'שהיות: :count', 'no_rooms' => 'אין חדרים', 'no_rooms_hint' => 'הוסיפו את החדר, הווילה או הדירה הראשונים.', 'room_created' => 'החדר נוסף.', 'room_updated' => 'החדר עודכן.', 'room_identifier_taken' => 'הקוד או השם כבר בשימוש בחדר אחר.',
     'translations' => 'גרסאות בשפות אחרות', 'translations_hint' => 'השם והטקסט יכולים להיות שונים לכל קהל. שדה ריק ישתמש בגרסה הרוסית הראשית.', 'localized_name' => 'שם', 'localized_text' => 'טקסט לאורח',
     'copy_pin' => 'העתקת PIN', 'pin_not_saved' => 'יש להגדיר PIN', 'new_pin_auto' => 'PIN חדש או אוטומטי', 'change_pin' => 'שינוי PIN', 'set_pin' => 'הגדרת PIN', 'pin_updated' => 'קוד ה-PIN עודכן. החיבורים הקודמים נסגרו.',
     'guide_type' => 'מדריך', 'add_bali_guides' => 'הוספת מדריכי אזורים בבאלי', 'bali_guides_confirm' => 'להוסיף מדריכים מוכנים ל-10 אזורים בבאלי? מדריכים קיימים יעודכנו.', 'bali_guides_installed' => 'מדריכי האזורים של באלי נוספו לעץ.',

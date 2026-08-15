@@ -7,6 +7,7 @@ use App\Enums\RequestStatus;
 use App\Enums\ServiceNodeType;
 use App\Events\ServiceRequestChanged;
 use App\Http\Controllers\Controller;
+use App\Models\Room;
 use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -27,7 +28,7 @@ class ServiceRequestController extends Controller
     {
         $companyId = $request->user()->company_id;
         $query = ServiceRequest::where('company_id', $companyId)
-            ->with(['assignee', 'service'])
+            ->with(['assignee', 'service', 'guestStay.room'])
             ->when($request->boolean('mine'), fn ($query) => $query->where('assigned_to', $request->user()->id))
             ->when($request->string('priority')->toString(), fn ($query, $priority) => $query->where('priority', $priority))
             ->latest();
@@ -39,8 +40,9 @@ class ServiceRequestController extends Controller
             : collect();
         $members = User::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $services = ServiceNode::where('company_id', $companyId)->where('type', ServiceNodeType::Service)->where('is_active', true)->orderBy('name')->get();
+        $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
 
-        return view('workspace.requests.index', compact('requests', 'archivedRequests', 'archivedCount', 'members', 'services'));
+        return view('workspace.requests.index', compact('requests', 'archivedRequests', 'archivedCount', 'members', 'services', 'rooms'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -57,6 +59,7 @@ class ServiceRequestController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
         ]);
         $companyId = $request->user()->company_id;
+        $room = Room::where('company_id', $companyId)->where('is_active', true)->where('number', $data['room_number'])->firstOrFail();
         $service = $this->tenantService($companyId, $data['service_node_id'] ?? null);
         $assignee = $this->tenantMember($companyId, $data['assigned_to'] ?? null);
 
@@ -84,7 +87,7 @@ class ServiceRequestController extends Controller
         });
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_new', 'workspace.notification_room_request', [
-            'room' => $serviceRequest->room_number,
+            'room' => $room->displayName(),
             'request' => $serviceRequest->title,
         ]);
         ServiceRequestChanged::dispatch($serviceRequest, 'created');
@@ -95,7 +98,7 @@ class ServiceRequestController extends Controller
     public function show(Request $request, ServiceRequest $serviceRequest): View
     {
         $this->ensureTenant($request, $serviceRequest);
-        $serviceRequest->load(['service', 'assignee', 'creator', 'items', 'guestSession.room', 'history.user']);
+        $serviceRequest->load(['service', 'assignee', 'creator', 'items', 'guestSession.room', 'guestStay.room', 'history.user']);
         $members = User::where('company_id', $request->user()->company_id)->where('is_active', true)->orderBy('name')->get();
 
         return view('workspace.requests.show', compact('serviceRequest', 'members'));
@@ -123,7 +126,7 @@ class ServiceRequestController extends Controller
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_taken', 'workspace.notification_taken_body', [
             'actor' => $request->user()->name,
-            'room' => $serviceRequest->room_number,
+            'room' => $serviceRequest->roomDisplayName(),
         ]);
         $this->notifyGuest($serviceRequest);
         ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'taken');
@@ -186,7 +189,7 @@ class ServiceRequestController extends Controller
         $serviceRequest->refresh();
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_status_changed', 'workspace.notification_status_body', [
-            'room' => $serviceRequest->room_number,
+            'room' => $serviceRequest->roomDisplayName(),
             'status' => $to->value,
         ]);
         if ($from !== $to) {

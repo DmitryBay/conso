@@ -17,6 +17,7 @@ use App\Http\Controllers\Workspace\DashboardController as WorkspaceDashboardCont
 use App\Http\Controllers\Workspace\GuestStayController;
 use App\Http\Controllers\Workspace\NotificationController;
 use App\Http\Controllers\Workspace\PushSubscriptionController;
+use App\Http\Controllers\Workspace\RoomController;
 use App\Http\Controllers\Workspace\ServiceRequestController;
 use App\Http\Controllers\Workspace\ServiceTreeController;
 use App\Http\Controllers\Workspace\TeamMemberController;
@@ -109,6 +110,9 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test'])->name('push-subscriptions.test');
 
     Route::middleware('role:company_owner')->group(function () {
+        Route::get('rooms', [RoomController::class, 'index'])->name('rooms.index');
+        Route::post('rooms', [RoomController::class, 'store'])->name('rooms.store');
+        Route::put('rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
         Route::post('backgrounds', [BackgroundLibraryController::class, 'store'])->name('backgrounds.store');
         Route::patch('backgrounds/{backgroundSet}/activate', [BackgroundLibraryController::class, 'activate'])->name('backgrounds.activate');
         Route::delete('backgrounds/images/{backgroundImage}', [BackgroundLibraryController::class, 'destroy'])->name('backgrounds.destroy');

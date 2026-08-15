@@ -24,7 +24,7 @@ class DashboardController extends Controller
             'completed_today' => (clone $base)->where('status', RequestStatus::Completed)->whereDate('completed_at', today())->count(),
         ];
 
-        $recent = (clone $base)->with(['assignee', 'service'])->latest()->limit(6)->get();
+        $recent = (clone $base)->with(['assignee', 'service', 'guestStay.room'])->latest()->limit(6)->get();
         $serviceCount = ServiceNode::where('company_id', $companyId)->where('type', 'service')->count();
         $teamCount = User::where('company_id', $companyId)->where('is_active', true)->count();
 

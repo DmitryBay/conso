@@ -3,7 +3,7 @@
     <div class="d-flex align-items-start justify-content-between gap-2"><span class="priority-label priority-{{ $item->priority->value }}"><span></span>{{ __('workspace.priority.'.$item->priority->value) }}</span><span class="text-secondary" style="font-size:10px">#{{ str($item->public_id)->substr(0,6)->upper() }}</span></div>
     <a class="kanban-title" href="{{ route('workspace.requests.show',$item) }}">{{ $item->title }}</a>
     @if($item->description)<p class="kanban-description">{{ str($item->description)->limit(90) }}</p>@endif
-    <div class="d-flex align-items-center gap-2 flex-wrap mt-3"><span class="room-chip"><i class="bi bi-door-closed me-1"></i>{{ $item->room_number }}</span>@if($item->due_at)<span class="due-chip {{ $item->isOverdue() ? 'overdue' : '' }}"><i class="bi bi-clock me-1"></i>{{ $item->due_at->format('H:i') }}</span>@endif</div>
+    <div class="d-flex align-items-center gap-2 flex-wrap mt-3"><span class="room-chip"><i class="bi bi-door-closed me-1"></i>{{ $item->roomDisplayName() }}</span>@if($item->due_at)<span class="due-chip {{ $item->isOverdue() ? 'overdue' : '' }}"><i class="bi bi-clock me-1"></i>{{ $item->due_at->format('H:i') }}</span>@endif</div>
     <div class="kanban-card-footer">
         <div class="d-flex align-items-center gap-2">@if($item->assignee)<span class="avatar avatar-sm">{{ mb_strtoupper(mb_substr($item->assignee->name,0,2)) }}</span><span class="text-truncate" style="font-size:11px">{{ $item->assignee->name }}</span>@else<span class="text-secondary" style="font-size:11px"><i class="bi bi-person-plus me-1"></i>{{ __('workspace.unassigned') }}</span>@endif</div>
         <div class="d-flex align-items-center gap-1">

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'room_inventory' => '房源管理', 'room_inventory_intro' => '面向住客的房间名称，以及用于登录和运营的内部代码。', 'add_room' => '添加房间', 'add_room_hint' => '代码必须唯一，住客也可使用显示名称登录。', 'room_code' => '房间代码', 'room_name' => '房间名称', 'floor' => '楼层 / 区域', 'room_active' => '启用', 'room_stays_count' => '入住次数：:count', 'no_rooms' => '暂无房间', 'no_rooms_hint' => '添加第一个房间、别墅或公寓。', 'room_created' => '房间已添加。', 'room_updated' => '房间已更新。', 'room_identifier_taken' => '该代码或名称已被其他房间使用。',
     'translations' => '其他语言版本', 'translations_hint' => '每种语言可以使用不同的名称和文案。空字段将使用主要俄语版本。', 'localized_name' => '名称', 'localized_text' => '住客文案',
     'copy_pin' => '复制 PIN', 'pin_not_saved' => '设置 PIN', 'new_pin_auto' => '新 PIN 或自动生成', 'change_pin' => '更改 PIN', 'set_pin' => '设置 PIN', 'pin_updated' => '住客 PIN 已更新，旧会话已关闭。',
     'guide_type' => '指南', 'add_bali_guides' => '添加巴厘岛地区指南', 'bali_guides_confirm' => '添加 10 个巴厘岛地区的现成指南？现有指南将更新。', 'bali_guides_installed' => '巴厘岛地区指南已添加到目录树。',

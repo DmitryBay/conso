@@ -12,6 +12,7 @@ use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
+use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,7 +63,7 @@ class OrderController extends Controller
             ->with('items.service')
             ->latest()
             ->get();
-        $money = app(\App\Support\Money::class);
+        $money = app(Money::class);
 
         return response()->json([
             'orders' => $orders->map(fn (ServiceRequest $order) => [
@@ -137,7 +138,7 @@ class OrderController extends Controller
                 new WorkspaceNotification([
                     'title_key' => 'workspace.notification_guest_confirmed',
                     'body_key' => 'workspace.notification_guest_confirmed_body',
-                    'params' => ['room' => $order->room_number, 'request' => $order->title],
+                    'params' => ['room' => $order->roomDisplayName(), 'request' => $order->title],
                     'request_id' => $order->id,
                     'url' => route('workspace.requests.show', $order),
                     'icon' => 'bi-person-check',

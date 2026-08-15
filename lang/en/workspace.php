@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'room_inventory' => 'Room inventory', 'room_inventory_intro' => 'Guest-facing room names and internal codes for access and operations.', 'add_room' => 'Add room', 'add_room_hint' => 'The code must be unique. Guests can use the display name instead of the code to sign in.', 'room_code' => 'Room code', 'room_name' => 'Room name', 'floor' => 'Floor / area', 'room_active' => 'Active', 'room_stays_count' => 'Stays: :count', 'no_rooms' => 'No rooms yet', 'no_rooms_hint' => 'Add the first room, villa, or apartment.', 'room_created' => 'Room added.', 'room_updated' => 'Room updated.', 'room_identifier_taken' => 'This code or name is already used by another room.',
     'translations' => 'Other language versions', 'translations_hint' => 'Names and copy may differ for each audience. Empty fields use the main Russian version.', 'localized_name' => 'Name', 'localized_text' => 'Guest-facing copy',
     'copy_pin' => 'Copy PIN', 'pin_not_saved' => 'Set a PIN', 'new_pin_auto' => 'New PIN or auto', 'change_pin' => 'Change PIN', 'set_pin' => 'Set PIN', 'pin_updated' => 'Guest PIN updated. Previous sessions were closed.',
     'guide_type' => 'Guide', 'add_bali_guides' => 'Add Bali area guides', 'bali_guides_confirm' => 'Add ready-made guides for 10 Bali areas? Existing guides will be updated.', 'bali_guides_installed' => 'Bali area guides were added to the tree.',

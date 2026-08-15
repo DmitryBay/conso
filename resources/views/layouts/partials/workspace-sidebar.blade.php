@@ -6,6 +6,7 @@
 <a class="sidebar-link {{ request()->routeIs('workspace.stays.*') ? 'active' : '' }}" href="{{ route('workspace.stays.index') }}"><i class="bi bi-door-open"></i>{{ __('workspace.stays') }}</a>
 </nav>
 <div class="sidebar-label mt-4">{{ __('workspace.management') }}</div><nav>
+@if(auth()->user()->isOwner())<a class="sidebar-link {{ request()->routeIs('workspace.rooms.*') ? 'active' : '' }}" href="{{ route('workspace.rooms.index') }}"><i class="bi bi-houses"></i>{{ __('workspace.room_inventory') }}</a>@endif
 <a class="sidebar-link {{ request()->routeIs('workspace.services.*') ? 'active' : '' }}" href="{{ route('workspace.services.index') }}"><i class="bi bi-diagram-3"></i>{{ __('workspace.service_tree') }}</a>
 <a class="sidebar-link {{ request()->routeIs('workspace.backgrounds.*') ? 'active' : '' }}" href="{{ route('workspace.backgrounds.index') }}"><i class="bi bi-images"></i>{{ __('workspace.background_library') }}</a>
 @if(auth()->user()->isOwner())<a class="sidebar-link {{ request()->routeIs('workspace.team.*') ? 'active' : '' }}" href="{{ route('workspace.team.index') }}"><i class="bi bi-people"></i>{{ __('workspace.team') }}</a>@endif

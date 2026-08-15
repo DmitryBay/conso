@@ -75,7 +75,7 @@ class GuestRequestStatusNotification extends Notification
     {
         return [
             'request' => $this->serviceRequest->service?->localizedName($locale) ?? $this->serviceRequest->title,
-            'room' => $this->serviceRequest->room_number,
+            'room' => $this->serviceRequest->roomDisplayName(),
             'status' => trans('guest.status.'.$this->serviceRequest->status->value, [], $locale),
         ];
     }

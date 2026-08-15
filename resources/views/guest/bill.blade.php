@@ -5,7 +5,7 @@
 <div class="guest-page-heading no-back"><div><span class="eyebrow">{{ __('guest.bill_eyebrow') }}</span><h1>{{ __('guest.bill_title') }}</h1><p class="page-subtitle">{{ __('guest.bill_intro') }}</p></div></div>
 <section class="guest-bill-paper">
     <div class="bill-hotel"><span class="guest-hotel-mark"><i class="bi bi-buildings"></i></span><div><strong>{{ $company->name }}</strong><small>{{ __('guest.base_currency', ['currency'=>$company->currency]) }}</small></div><span>{{ now()->format('d.m.Y') }}</span></div>
-    <div class="bill-person"><div><small>{{ __('guest.guest') }}</small><strong>{{ $stay->guest_name ?: __('guest.not_specified') }}</strong></div><div><small>{{ __('guest.room') }}</small><strong>{{ $stay->room->number }}</strong></div></div>
+    <div class="bill-person"><div><small>{{ __('guest.guest') }}</small><strong>{{ $stay->guest_name ?: __('guest.not_specified') }}</strong></div><div><small>{{ __('guest.room') }}</small><strong>{{ $stay->room->displayName() }}</strong></div></div>
     @if($orders->where('price_minor', '>', 0)->isEmpty())
         <div class="bill-empty"><i class="bi bi-receipt"></i><h2>{{ __('guest.bill_empty') }}</h2><p>{{ __('guest.bill_empty_hint') }}</p></div>
     @else

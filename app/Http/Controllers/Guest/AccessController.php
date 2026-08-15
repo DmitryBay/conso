@@ -79,7 +79,7 @@ class AccessController extends Controller
     {
         abort_if($company->status === CompanyStatus::Suspended, 403, 'Сервис отеля временно недоступен.');
         $data = $request->validate([
-            'room_number' => ['required', 'string', 'max:30'],
+            'room_number' => ['required', 'string', 'max:160'],
             'pin' => ['required', 'string', 'min:4', 'max:10'],
             'guest_name' => ['nullable', 'string', 'max:160'],
             'guest_email' => ['nullable', 'email:rfc', 'max:255'],
@@ -90,7 +90,11 @@ class AccessController extends Controller
             return back()->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))->with('guest_error', __('guest.too_many_attempts'));
         }
 
-        $room = Room::where('company_id', $company->id)->where('number', trim($data['room_number']))->where('is_active', true)->first();
+        $roomIdentifier = trim($data['room_number']);
+        $room = Room::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->where(fn ($query) => $query->where('number', $roomIdentifier)->orWhere('name', $roomIdentifier))
+            ->first();
         $stay = $room ? GuestStay::where('company_id', $company->id)
             ->where('room_id', $room->id)
             ->whereIn('status', [GuestStayStatus::Upcoming, GuestStayStatus::CheckedIn])
