@@ -84,6 +84,7 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::get('requests/{serviceRequest}', [ServiceRequestController::class, 'show'])->name('requests.show');
     Route::patch('requests/{serviceRequest}/take', [ServiceRequestController::class, 'take'])->name('requests.take');
     Route::patch('requests/{serviceRequest}/status', [ServiceRequestController::class, 'status'])->name('requests.status');
+    Route::patch('requests/{serviceRequest}/archive', [ServiceRequestController::class, 'archive'])->name('requests.archive');
 
     Route::get('stays', [GuestStayController::class, 'index'])->name('stays.index');
     Route::post('stays', [GuestStayController::class, 'store'])->name('stays.store');

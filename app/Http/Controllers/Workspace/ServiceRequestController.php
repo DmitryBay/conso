@@ -32,11 +32,15 @@ class ServiceRequestController extends Controller
             ->when($request->string('priority')->toString(), fn ($query, $priority) => $query->where('priority', $priority))
             ->latest();
 
-        $requests = $query->get()->groupBy(fn (ServiceRequest $item) => $item->status->value);
+        $requests = (clone $query)->whereNull('archived_at')->get()->groupBy(fn (ServiceRequest $item) => $item->status->value);
+        $archivedCount = (clone $query)->whereNotNull('archived_at')->count();
+        $archivedRequests = $request->boolean('archive')
+            ? (clone $query)->whereNotNull('archived_at')->get()
+            : collect();
         $members = User::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $services = ServiceNode::where('company_id', $companyId)->where('type', ServiceNodeType::Service)->where('is_active', true)->orderBy('name')->get();
 
-        return view('workspace.requests.index', compact('requests', 'members', 'services'));
+        return view('workspace.requests.index', compact('requests', 'archivedRequests', 'archivedCount', 'members', 'services'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -186,6 +190,30 @@ class ServiceRequestController extends Controller
         ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'status_changed');
 
         return $this->response($request, __('workspace.request_updated'));
+    }
+
+    public function archive(Request $request, ServiceRequest $serviceRequest): RedirectResponse|JsonResponse
+    {
+        $this->ensureTenant($request, $serviceRequest);
+        $data = $request->validate(['archived' => ['required', 'boolean']]);
+        $archived = (bool) $data['archived'];
+
+        if ($archived !== (bool) $serviceRequest->archived_at) {
+            DB::transaction(function () use ($request, $serviceRequest, $archived) {
+                $serviceRequest->update(['archived_at' => $archived ? now() : null]);
+                $serviceRequest->history()->create([
+                    'user_id' => $request->user()->id,
+                    'from_status' => $serviceRequest->status->value,
+                    'to_status' => $serviceRequest->status->value,
+                    'note' => $archived ? 'workspace.history_archived' : 'workspace.history_restored',
+                    'created_at' => now(),
+                ]);
+            });
+
+            ServiceRequestChanged::dispatch($serviceRequest->fresh(), $archived ? 'archived' : 'restored');
+        }
+
+        return $this->response($request, __($archived ? 'workspace.request_archived' : 'workspace.request_restored'));
     }
 
     private function ensureTenant(Request $request, ServiceRequest $item): void

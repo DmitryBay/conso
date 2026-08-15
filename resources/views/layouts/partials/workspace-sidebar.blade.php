@@ -2,7 +2,7 @@
 @unless($mobile)<a class="brand" href="{{ route('workspace.dashboard') }}"><span class="brand-mark"><i class="bi bi-bell-fill"></i></span><span><span class="brand-name d-block">{{ str($currentCompany->name)->limit(20) }}</span><span class="brand-caption d-block">{{ __('workspace.hotel_workspace') }}</span></span></a>@endunless
 <div class="sidebar-label">{{ __('workspace.work_shift') }}</div><nav>
 <a class="sidebar-link {{ request()->routeIs('workspace.dashboard') ? 'active' : '' }}" href="{{ route('workspace.dashboard') }}"><i class="bi bi-grid-1x2"></i>{{ __('workspace.overview') }}</a>
-<a class="sidebar-link {{ request()->routeIs('workspace.requests.*') ? 'active' : '' }}" href="{{ route('workspace.requests.index') }}"><i class="bi bi-kanban"></i>{{ __('workspace.requests') }} @php($newCount=$currentCompany->requests()->where('status','new')->count()) @if($newCount)<span class="sidebar-badge">{{ $newCount }}</span>@endif</a>
+<a class="sidebar-link {{ request()->routeIs('workspace.requests.*') ? 'active' : '' }}" href="{{ route('workspace.requests.index') }}"><i class="bi bi-kanban"></i>{{ __('workspace.requests') }} @php($newCount=$currentCompany->requests()->whereNull('archived_at')->where('status','new')->count()) @if($newCount)<span class="sidebar-badge">{{ $newCount }}</span>@endif</a>
 <a class="sidebar-link {{ request()->routeIs('workspace.stays.*') ? 'active' : '' }}" href="{{ route('workspace.stays.index') }}"><i class="bi bi-door-open"></i>{{ __('workspace.stays') }}</a>
 </nav>
 <div class="sidebar-label mt-4">{{ __('workspace.management') }}</div><nav>

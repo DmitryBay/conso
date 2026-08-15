@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'public_id', 'company_id', 'guest_stay_id', 'guest_session_id', 'service_node_id', 'assigned_to', 'created_by', 'source',
     'room_number', 'guest_name', 'title', 'description', 'status', 'priority',
-    'price_minor', 'payment_method', 'payment_status', 'due_at', 'accepted_at', 'completed_at',
+    'price_minor', 'payment_method', 'payment_status', 'due_at', 'accepted_at', 'completed_at', 'archived_at',
 ])]
 class ServiceRequest extends Model
 {
@@ -27,6 +27,7 @@ class ServiceRequest extends Model
             'due_at' => 'datetime',
             'accepted_at' => 'datetime',
             'completed_at' => 'datetime',
+            'archived_at' => 'datetime',
             'price_minor' => 'integer',
         ];
     }

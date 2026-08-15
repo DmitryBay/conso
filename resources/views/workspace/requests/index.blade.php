@@ -2,12 +2,26 @@
 @section('title',__('workspace.kanban'))
 @section('content')
 <div class="d-flex align-items-end justify-content-between gap-3 mb-3"><div><div class="eyebrow">{{ __('workspace.service_shift') }}</div><h1 class="page-title">{{ __('workspace.guest_requests') }}</h1><p class="page-subtitle">{{ __('workspace.kanban_intro') }}</p></div><div class="page-actions"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal"><i class="bi bi-plus-lg me-sm-2"></i><span>{{ __('workspace.new_request') }}</span></button></div></div>
-<div class="kanban-toolbar surface-card"><form class="d-flex gap-2 flex-wrap" method="GET"><label class="filter-check"><input type="checkbox" name="mine" value="1" @checked(request()->boolean('mine')) onchange="this.form.submit()"><span><i class="bi bi-person-check me-1"></i>{{ __('workspace.mine_only') }}</span></label><select class="form-select form-select-sm" name="priority" onchange="this.form.submit()"><option value="">{{ __('workspace.all_priorities') }}</option>@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected(request('priority')===$priority->value)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select>@if(request()->hasAny(['mine','priority']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index') }}">{{ __('workspace.reset') }}</a>@endif</form><div class="text-secondary d-none d-md-block" style="font-size:11px"><i class="bi bi-arrows-move me-1"></i>{{ __('workspace.drag_hint') }}</div></div>
+<div class="kanban-toolbar surface-card">
+    <form class="d-flex gap-2 flex-wrap" method="GET">
+        @if(request()->boolean('archive'))<input type="hidden" name="archive" value="1">@endif
+        <label class="filter-check"><input type="checkbox" name="mine" value="1" @checked(request()->boolean('mine')) onchange="this.form.submit()"><span><i class="bi bi-person-check me-1"></i>{{ __('workspace.mine_only') }}</span></label>
+        <select class="form-select form-select-sm" name="priority" onchange="this.form.submit()"><option value="">{{ __('workspace.all_priorities') }}</option>@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected(request('priority')===$priority->value)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select>
+        @if(request()->hasAny(['mine','priority']))<a class="btn btn-sm btn-light" href="{{ route('workspace.requests.index', request()->boolean('archive') ? ['archive'=>1] : []) }}">{{ __('workspace.reset') }}</a>@endif
+    </form>
+    <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-sm {{ request()->boolean('archive') ? 'btn-secondary' : 'btn-light' }}" href="{{ route('workspace.requests.index', array_filter(['mine'=>request('mine'), 'priority'=>request('priority'), 'archive'=>request()->boolean('archive') ? null : 1])) }}"><i class="bi bi-archive me-1"></i>{{ request()->boolean('archive') ? __('workspace.hide_archive') : __('workspace.show_archive') }} @if($archivedCount)<span class="ms-1">{{ $archivedCount }}</span>@endif</a>
+        <div class="text-secondary d-none d-md-block" style="font-size:11px"><i class="bi bi-arrows-move me-1"></i>{{ __('workspace.drag_hint') }}</div>
+    </div>
+</div>
 <div class="kanban-board">
 @foreach(\App\Enums\RequestStatus::kanban() as $status)
 @php($column=$requests[$status->value] ?? collect())
 <section class="kanban-column" data-kanban-column data-status="{{ $status->value }}"><header class="kanban-column-header"><div class="d-flex align-items-center gap-2"><span class="column-dot bg-{{ $status->color() }}"></span><h2>{{ __('workspace.status.'.$status->value) }}</h2><span class="column-count">{{ $column->count() }}</span></div>@if($status===\App\Enums\RequestStatus::New)<button class="btn btn-link text-secondary p-0" data-bs-toggle="modal" data-bs-target="#newRequestModal"><i class="bi bi-plus-lg"></i></button>@endif</header><div class="kanban-cards">@forelse($column as $item)@include('workspace.requests._card',['item'=>$item])@empty<div class="kanban-empty"><i class="bi bi-inbox"></i><span>{{ __('workspace.no_requests') }}</span></div>@endforelse</div></section>
 @endforeach
+@if(request()->boolean('archive'))
+<section class="kanban-column kanban-column-archive"><header class="kanban-column-header"><div class="d-flex align-items-center gap-2"><span class="column-dot bg-secondary"></span><h2>{{ __('workspace.archive') }}</h2><span class="column-count">{{ $archivedRequests->count() }}</span></div></header><div class="kanban-cards">@forelse($archivedRequests as $item)@include('workspace.requests._card',['item'=>$item,'archivedColumn'=>true])@empty<div class="kanban-empty"><i class="bi bi-archive"></i><span>{{ __('workspace.archive_empty') }}</span></div>@endforelse</div></section>
+@endif
 </div>
 @endsection
 @push('modals')

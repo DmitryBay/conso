@@ -59,6 +59,50 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->assertSame(1, $owner->notifications()->count());
     }
 
+    public function test_archived_requests_are_hidden_by_default_and_can_be_restored(): void
+    {
+        [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
+        $item = $this->request($company);
+
+        $this->actingAs($owner)->patch(route('workspace.requests.archive', $item), [
+            'archived' => true,
+        ])->assertRedirect();
+
+        $this->assertNotNull($item->fresh()->archived_at);
+        $this->actingAs($owner)->get(route('workspace.requests.index'))
+            ->assertOk()
+            ->assertDontSee('Extra towels');
+        $this->actingAs($owner)->get(route('workspace.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Extra towels');
+        $this->actingAs($owner)->get(route('workspace.requests.index', ['archive' => 1]))
+            ->assertOk()
+            ->assertSee('Extra towels');
+
+        $this->actingAs($owner)->patch(route('workspace.requests.archive', $item), [
+            'archived' => false,
+        ])->assertRedirect();
+
+        $this->assertNull($item->fresh()->archived_at);
+        $this->assertDatabaseHas('service_request_status_histories', [
+            'service_request_id' => $item->id,
+            'note' => 'workspace.history_restored',
+        ]);
+    }
+
+    public function test_user_cannot_archive_request_from_another_company(): void
+    {
+        [, $ownerA] = $this->companyWithOwner('Alpha Hotel');
+        [$companyB] = $this->companyWithOwner('Beta Hotel');
+        $foreignRequest = $this->request($companyB);
+
+        $this->actingAs($ownerA)->patch(route('workspace.requests.archive', $foreignRequest), [
+            'archived' => true,
+        ])->assertNotFound();
+
+        $this->assertNull($foreignRequest->fresh()->archived_at);
+    }
+
     public function test_only_owner_can_manage_team(): void
     {
         [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
