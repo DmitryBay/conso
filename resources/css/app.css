@@ -877,7 +877,7 @@ a { text-decoration: none; }
 .occupancy-cell { align-items:center; border-right:1px solid #edf1ef; display:flex; justify-content:center; position:relative; }
 .occupancy-cell.is-occupied { background:#d8e9e1; }
 .occupancy-cell.is-occupied:hover { background:#c7dfd4; }
-.occupancy-cell.is-occupied span { align-items:center; border:1px solid rgb(255 255 255 / 68%); border-radius:50%; box-shadow:0 1px 2px rgb(37 55 49 / 12%); display:flex; font-size:7px; font-weight:800; height:18px; justify-content:center; width:18px; }
+.occupancy-cell.is-occupied span { align-items:center; border:1px solid rgb(255 255 255 / 68%); border-radius:50%; box-shadow:0 1px 2px rgb(37 55 49 / 12%); display:flex; font-size:12px; font-weight:800; height:32px; justify-content:center; line-height:1; width:32px; }
 .guest-color-0 { background:#7a4e48; color:#fff; }
 .guest-color-1 { background:#765538; color:#fff; }
 .guest-color-2 { background:#6d5f35; color:#fff; }
