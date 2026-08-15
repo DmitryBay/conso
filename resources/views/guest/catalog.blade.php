@@ -17,7 +17,7 @@
 @endphp
 
 <section class="guest-section service-catalog"><div class="guest-section-title"><div><span class="eyebrow">{{ __('guest.catalog') }}</span><h2>{{ __('guest.sections') }}</h2></div><span>{{ $menuItems->count() }}</span></div>
-<div class="guest-main-menu" data-guest-menu data-page-size="9">
+<div class="guest-main-menu {{ $menuPages->count() > 1 ? 'is-paginated' : '' }}" data-guest-menu data-page-size="9">
     <div class="guest-menu-track" data-menu-track>
     @foreach($menuPages as $page)
         <div class="guest-menu-page" data-menu-page>
