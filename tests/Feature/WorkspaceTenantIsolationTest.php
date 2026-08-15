@@ -76,7 +76,7 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->assertSame(1, $owner->notifications()->count());
     }
 
-    public function test_archived_requests_are_hidden_by_default_and_can_be_restored(): void
+    public function test_archived_request_stays_in_its_status_column_and_can_be_restored(): void
     {
         [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
         $item = $this->request($company);
@@ -88,11 +88,9 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->assertNotNull($item->fresh()->archived_at);
         $this->actingAs($owner)->get(route('workspace.requests.index'))
             ->assertOk()
-            ->assertDontSee('Extra towels');
+            ->assertSee('Extra towels')
+            ->assertViewHas('requests', fn ($requests) => $requests->get(RequestStatus::New->value)?->contains('id', $item->id));
         $this->actingAs($owner)->get(route('workspace.dashboard'))
-            ->assertOk()
-            ->assertDontSee('Extra towels');
-        $this->actingAs($owner)->get(route('workspace.requests.index', ['archive' => 1]))
             ->assertOk()
             ->assertSee('Extra towels');
 

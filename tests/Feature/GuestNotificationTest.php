@@ -140,6 +140,20 @@ class GuestNotificationTest extends TestCase
         $mail = (new GuestRequestStatusNotification($serviceRequest->fresh()->load(['company', 'service']), true))->toMail($session->fresh()->load('stay'));
         $this->assertSame('Permintaan: Sedang diproses · '.$company->name, $mail->subject);
         $this->assertSame('Buka permintaan', $mail->actionText);
+
+        foreach ([
+            RequestStatus::WaitingGuest->value => 'Menunggu respons tamu',
+            RequestStatus::Ready->value => 'Siap — konfirmasi penerimaan',
+            RequestStatus::Completed->value => 'Selesai',
+        ] as $status => $label) {
+            $serviceRequest->update(['status' => $status]);
+            $push = (new GuestRequestStatusNotification(
+                $serviceRequest->fresh()->load(['company', 'service', 'guestStay.room']),
+            ))->toWebPush($session)->toArray();
+
+            $this->assertSame('Permintaan: '.$label, $push['title']);
+            $this->assertStringContainsString($label, $push['body']);
+        }
     }
 
     private function hotel(): array

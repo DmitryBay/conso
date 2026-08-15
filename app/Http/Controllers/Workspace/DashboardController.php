@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $companyId = $request->user()->company_id;
-        $base = ServiceRequest::where('company_id', $companyId)->whereNull('archived_at');
+        $base = ServiceRequest::where('company_id', $companyId);
 
         $stats = [
             'new' => (clone $base)->where('status', RequestStatus::New)->count(),

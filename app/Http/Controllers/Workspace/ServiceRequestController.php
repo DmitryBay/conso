@@ -33,16 +33,12 @@ class ServiceRequestController extends Controller
             ->when($request->string('priority')->toString(), fn ($query, $priority) => $query->where('priority', $priority))
             ->latest();
 
-        $requests = (clone $query)->whereNull('archived_at')->get()->groupBy(fn (ServiceRequest $item) => $item->status->value);
-        $archivedCount = (clone $query)->whereNotNull('archived_at')->count();
-        $archivedRequests = $request->boolean('archive')
-            ? (clone $query)->whereNotNull('archived_at')->get()
-            : collect();
+        $requests = $query->get()->groupBy(fn (ServiceRequest $item) => $item->status->value);
         $members = User::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $services = ServiceNode::where('company_id', $companyId)->where('type', ServiceNodeType::Service)->where('is_active', true)->orderBy('name')->get();
         $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
 
-        return view('workspace.requests.index', compact('requests', 'archivedRequests', 'archivedCount', 'members', 'services', 'rooms'));
+        return view('workspace.requests.index', compact('requests', 'members', 'services', 'rooms'));
     }
 
     public function store(Request $request): RedirectResponse
