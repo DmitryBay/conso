@@ -15,6 +15,13 @@ if (guestKiosk) {
     document.addEventListener('gesturestart', event => event.preventDefault());
 }
 
+if (document.body.classList.contains('guest-catalog-page')) {
+    window.scrollTo(0, 0);
+    document.addEventListener('touchmove', event => {
+        if (!event.target.closest('.modal')) event.preventDefault();
+    }, { passive: false });
+}
+
 const serviceWorkerUrl = document.querySelector('meta[name="webpush-service-worker"]')?.content;
 const serviceWorkerScope = document.querySelector('meta[name="webpush-scope"]')?.content;
 let serviceWorkerRegistration;

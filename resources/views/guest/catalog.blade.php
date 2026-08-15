@@ -1,5 +1,6 @@
 @extends('layouts.guest')
 @section('title', __('guest.services'))
+@section('html-class', 'guest-catalog-root')
 @section('body-class', 'guest-catalog-page')
 @section('main-class', 'guest-catalog-main')
 @section('content')
