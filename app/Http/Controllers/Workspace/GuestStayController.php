@@ -272,6 +272,9 @@ class GuestStayController extends Controller
     {
         $this->ensureTenant($request, $guestStay);
         abort_unless(filled($guestStay->guest_email), 422);
+        if (config('mail.default') === 'log') {
+            return back()->withErrors(['email' => __('workspace.mail_delivery_not_configured')]);
+        }
         $data = $request->validate([
             'order_ids' => ['nullable', 'array'],
             'order_ids.*' => ['integer', 'distinct'],

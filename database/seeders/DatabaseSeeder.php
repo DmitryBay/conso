@@ -13,7 +13,9 @@ use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
+use App\Support\ServiceOptionCatalog;
 use App\Support\ServiceTranslations;
+use App\Support\SmartHomeDemo;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -101,6 +103,7 @@ class DatabaseSeeder extends Seeder
         $transfer = $this->service($company, $transport, 'Трансфер в аэропорт', 'Частный автомобиль до аэропорта DPS', 350000, 60, 'bi-airplane', 10);
 
         $this->call(ServiceCatalogSeeder::class);
+        SmartHomeDemo::install($company);
         $this->call(BackgroundSetSeeder::class);
 
         $requestData = [
@@ -155,7 +158,9 @@ class DatabaseSeeder extends Seeder
 
     private function service(Company $company, ServiceNode $parent, string $name, string $description, ?int $price, int $sla, string $icon, int $order): ServiceNode
     {
-        return ServiceNode::create(['company_id' => $company->id, 'parent_id' => $parent->id, 'type' => ServiceNodeType::Service, 'name' => $name, 'description' => $description, 'translations' => ServiceTranslations::for($name), 'background_key' => $this->backgroundFor($name), 'price_minor' => $price, 'sla_minutes' => $sla, 'icon' => $icon, 'sort_order' => $order]);
+        $background = $this->backgroundFor($name);
+
+        return ServiceNode::create(['company_id' => $company->id, 'parent_id' => $parent->id, 'type' => ServiceNodeType::Service, 'name' => $name, 'description' => $description, 'translations' => ServiceTranslations::for($name), 'option_keys' => ServiceOptionCatalog::defaultsFor($name, $background), 'background_key' => $background, 'price_minor' => $price, 'sla_minutes' => $sla, 'icon' => $icon, 'sort_order' => $order]);
     }
 
     private function backgroundFor(string $name): string

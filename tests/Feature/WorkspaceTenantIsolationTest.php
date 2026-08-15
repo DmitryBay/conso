@@ -61,6 +61,42 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->assertDatabaseMissing('service_nodes', ['company_id' => $companyA->id, 'name' => 'Room service']);
     }
 
+    public function test_manager_can_configure_guest_options_and_smart_home_in_service_tree(): void
+    {
+        [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
+        $category = ServiceNode::create([
+            'company_id' => $company->id,
+            'type' => ServiceNodeType::Category,
+            'name' => 'Room',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($owner)->post(route('workspace.services.store'), [
+            'type' => ServiceNodeType::Service->value,
+            'name' => 'Room controls',
+            'parent_id' => $category->id,
+            'is_active' => 1,
+            'option_keys' => ['in_room_service', 'preferred_time'],
+            'smart_home_enabled' => 1,
+        ])->assertRedirect();
+
+        $service = ServiceNode::where('company_id', $company->id)->where('name', 'Room controls')->firstOrFail();
+        $this->assertSame(['in_room_service', 'preferred_time'], $service->option_keys);
+        $this->assertTrue($service->smart_home_enabled);
+
+        $this->get(route('workspace.services.index'))
+            ->assertOk()
+            ->assertSee('Обслуживание в номере')
+            ->assertSee('Умный дом — демо-панель');
+
+        $this->post(route('workspace.services.store'), [
+            'type' => ServiceNodeType::Service->value,
+            'name' => 'Invalid options',
+            'is_active' => 1,
+            'option_keys' => ['unsupported_option'],
+        ])->assertSessionHasErrors('option_keys.0');
+    }
+
     public function test_manager_can_take_request_and_owner_receives_notification(): void
     {
         [$company, $owner] = $this->companyWithOwner('Alpha Hotel');

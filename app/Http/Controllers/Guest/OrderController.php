@@ -13,6 +13,7 @@ use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
 use App\Support\Money;
+use App\Support\ServiceOptionCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,14 +35,25 @@ class OrderController extends Controller
     public function store(Request $request, Company $company, ServiceNode $serviceNode, CreateGuestOrder $action): RedirectResponse
     {
         $this->ensureService($company, $serviceNode);
+        abort_if($serviceNode->smart_home_enabled, 422);
+        $allowedOptions = ServiceOptionCatalog::normalize($serviceNode->option_keys ?? []);
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:10'],
             'payment_method' => [$serviceNode->price_minor ? 'required' : 'nullable', Rule::in(['room_charge', 'cash'])],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'selected_options' => ['nullable', 'array'],
+            'selected_options.*' => ['string', 'distinct', Rule::in($allowedOptions)],
         ]);
         /** @var GuestSession $stay */
         $stay = app('guestStay');
-        $order = $action->handle($stay, $serviceNode, (int) $data['quantity'], $data['payment_method'] ?? 'room_charge', $data['comment'] ?? null);
+        $order = $action->handle(
+            $stay,
+            $serviceNode,
+            (int) $data['quantity'],
+            $data['payment_method'] ?? 'room_charge',
+            $data['comment'] ?? null,
+            ServiceOptionCatalog::normalize($data['selected_options'] ?? []),
+        );
 
         return redirect()->route('guest.orders.show', [$company, $order])->with('guest_success', __('guest.order_sent'));
     }

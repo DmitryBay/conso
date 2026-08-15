@@ -15,12 +15,12 @@ use Illuminate\Support\Str;
 
 class CreateGuestOrder
 {
-    public function handle(GuestSession $stay, ServiceNode $service, int $quantity, string $paymentMethod, ?string $comment): ServiceRequest
+    public function handle(GuestSession $stay, ServiceNode $service, int $quantity, string $paymentMethod, ?string $comment, array $selectedOptions = []): ServiceRequest
     {
         abort_unless($service->company_id === $stay->company_id && $service->is_active && ! $service->isCategory(), 404);
         $total = ($service->price_minor ?? 0) * $quantity;
 
-        $order = DB::transaction(function () use ($stay, $service, $quantity, $paymentMethod, $comment, $total) {
+        $order = DB::transaction(function () use ($stay, $service, $quantity, $paymentMethod, $comment, $total, $selectedOptions) {
             $order = ServiceRequest::create([
                 'public_id' => (string) Str::uuid(),
                 'company_id' => $stay->company_id,
@@ -51,6 +51,7 @@ class CreateGuestOrder
                 'unit_price_minor' => $service->price_minor ?? 0,
                 'total_price_minor' => $total,
                 'notes' => $comment,
+                'options_snapshot' => $selectedOptions ?: null,
             ]);
 
             $order->history()->create([

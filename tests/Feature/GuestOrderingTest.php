@@ -640,6 +640,67 @@ class GuestOrderingTest extends TestCase
         ]);
     }
 
+    public function test_configured_service_options_are_validated_snapshotted_and_visible_to_guest_and_manager(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $manager = User::factory()->create(['company_id' => $company->id, 'role' => UserRole::Manager, 'is_active' => true]);
+        $service = $this->service($company, 'Room service', 180000);
+        $service->update(['option_keys' => ['table_setting', 'in_room_service', 'contactless_delivery']]);
+        $stay = $this->stay($company, $room);
+        $guestSession = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($guestSession)->get(route('guest.orders.create', [$company, $service]))
+            ->assertOk()
+            ->assertSee('Сервировка')
+            ->assertSee('Обслуживание в номере')
+            ->assertSee('name="selected_options[]"', false);
+
+        $this->withSession($guestSession)->post(route('guest.orders.store', [$company, $service]), [
+            'quantity' => 1,
+            'payment_method' => 'room_charge',
+            'selected_options' => ['table_setting', 'in_room_service'],
+        ])->assertRedirect();
+
+        $order = ServiceRequest::firstOrFail();
+        $item = $order->items()->firstOrFail();
+        $this->assertSame(['table_setting', 'in_room_service'], $item->options_snapshot);
+
+        $this->withSession($guestSession)->get(route('guest.orders.show', [$company, $order]))
+            ->assertOk()->assertSee('Сервировка')->assertSee('Обслуживание в номере');
+        $this->actingAs($manager)->get(route('workspace.requests.show', $order))
+            ->assertOk()->assertSee('Сервировка')->assertSee('Обслуживание в номере');
+
+        $this->withSession($guestSession)->post(route('guest.orders.store', [$company, $service]), [
+            'quantity' => 1,
+            'payment_method' => 'room_charge',
+            'selected_options' => ['child_seat'],
+        ])->assertSessionHasErrors('selected_options.0');
+        $this->assertDatabaseCount('service_requests', 1);
+    }
+
+    public function test_smart_home_service_displays_demo_controls_and_cannot_create_an_order(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $service = $this->service($company, 'Room controls', 0);
+        $service->update(['smart_home_enabled' => true]);
+        $stay = $this->stay($company, $room);
+        $guestSession = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($guestSession)->get(route('guest.orders.create', [$company, $service]))
+            ->assertOk()
+            ->assertSee('data-smart-home', false)
+            ->assertSee('Основной свет')
+            ->assertSee('Шторы')
+            ->assertSee('Кондиционер')
+            ->assertSee('Не беспокоить')
+            ->assertDontSee('name="quantity"', false);
+
+        $this->withSession($guestSession)->post(route('guest.orders.store', [$company, $service]), [
+            'quantity' => 1,
+        ])->assertUnprocessable();
+        $this->assertDatabaseCount('service_requests', 0);
+    }
+
     private function hotel(string $name): array
     {
         $company = Company::create([

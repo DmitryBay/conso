@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ServiceNodeType;
 use App\Models\Company;
 use App\Models\ServiceNode;
+use App\Support\ServiceOptionCatalog;
 use App\Support\ServiceTranslations;
 use Illuminate\Database\Seeder;
 
@@ -42,6 +43,9 @@ class ServiceCatalogSeeder extends Seeder
             'name' => $definition['name']['ru'],
             'description' => $definition['description'] ?? null,
             'translations' => $translations,
+            'option_keys' => $definition['type'] === ServiceNodeType::Service
+                ? ServiceOptionCatalog::defaultsFor($definition['name']['ru'], $definition['background'] ?? null)
+                : null,
             'icon' => $definition['icon'],
             'background_key' => $definition['background'] ?? null,
             'price_minor' => $definition['price'] ?? null,

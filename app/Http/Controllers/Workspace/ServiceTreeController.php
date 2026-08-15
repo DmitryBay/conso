@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BackgroundImage;
 use App\Models\ServiceNode;
 use App\Support\BaliDistrictGuides;
+use App\Support\ServiceOptionCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,9 @@ class ServiceTreeController extends Controller
         $categories = $nodes->where('type', ServiceNodeType::Category);
         $backgroundImages = $request->user()->company->backgroundSet?->images()->where('is_active', true)->get() ?? collect();
 
-        return view('workspace.services.index', compact('roots', 'categories', 'nodes', 'backgroundImages'));
+        $serviceOptions = ServiceOptionCatalog::OPTIONS;
+
+        return view('workspace.services.index', compact('roots', 'categories', 'nodes', 'backgroundImages', 'serviceOptions'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -126,7 +129,14 @@ class ServiceTreeController extends Controller
             'sla_minutes' => ['nullable', 'integer', 'min:1', 'max:10080'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65000'],
             'is_active' => ['nullable', 'boolean'],
+            'option_keys' => ['nullable', 'array'],
+            'option_keys.*' => ['string', 'distinct', Rule::in(ServiceOptionCatalog::keys())],
+            'smart_home_enabled' => ['nullable', 'boolean'],
         ]) + ['is_active' => $request->boolean('is_active')];
+
+        $isService = ($data['type'] ?? null) === ServiceNodeType::Service->value;
+        $data['option_keys'] = $isService ? ServiceOptionCatalog::normalize($data['option_keys'] ?? []) : null;
+        $data['smart_home_enabled'] = $isService && $request->boolean('smart_home_enabled');
 
         if ($request->has('translations')) {
             $data['translations'] = collect($data['translations'] ?? [])

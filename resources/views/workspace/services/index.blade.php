@@ -12,9 +12,13 @@
 @endpush
 @push('scripts')
 <script type="application/json" id="serviceNodeTranslations">{!! $nodes->mapWithKeys(fn($node) => [(string)$node->id => $node->translations ?: []])->toJson(JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="serviceNodeOptions">{!! $nodes->mapWithKeys(fn($node) => [(string)$node->id => $node->option_keys ?: []])->toJson(JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="serviceNodeSmartHome">{!! $nodes->mapWithKeys(fn($node) => [(string)$node->id => (bool)$node->smart_home_enabled])->toJson() !!}</script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const translations = JSON.parse(document.getElementById('serviceNodeTranslations').textContent);
+    const options = JSON.parse(document.getElementById('serviceNodeOptions').textContent);
+    const smartHome = JSON.parse(document.getElementById('serviceNodeSmartHome').textContent);
     const toggleFields = modal => { const type=modal.querySelector('.node-type-select').value; modal.querySelector('.node-service-fields').classList.toggle('d-none',type!=='service'); };
     document.querySelectorAll('.node-type-select').forEach(el=>{el.addEventListener('change',()=>toggleFields(el.closest('.modal'))); toggleFields(el.closest('.modal'));});
     document.querySelectorAll('.add-child-node').forEach(btn=>btn.addEventListener('click',()=>{document.querySelector('#addNodeModal .node-parent').value=btn.dataset.parent;}));
@@ -30,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('.node-sla').value=btn.dataset.sla||'';
         modal.querySelector('.node-order').value=btn.dataset.order||0;
         modal.querySelector('.node-active').checked=btn.dataset.active==='1';
+        modal.querySelectorAll('.node-option').forEach(field=>field.checked=(options[btn.dataset.id]||[]).includes(field.value));
+        modal.querySelector('.node-smart-home').checked=Boolean(smartHome[btn.dataset.id]);
         modal.querySelectorAll('.node-translation-name,.node-translation-description').forEach(field=>field.value='');
         Object.entries(translations[btn.dataset.id]||{}).forEach(([locale,value])=>{
             const name=typeof value==='string'?value:(value?.name||'');
