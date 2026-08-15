@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'public_id', 'company_id', 'room_id', 'guest_name', 'guest_email', 'check_in_at', 'check_out_at',
-    'nights', 'access_pin_hash', 'access_pin', 'status', 'checked_out_at',
+    'public_id', 'company_id', 'room_id', 'guest_name', 'guest_email', 'emergency_phone', 'internal_notes',
+    'check_in_at', 'check_out_at', 'nights', 'access_pin_hash', 'access_pin', 'status', 'checked_out_at',
 ])]
 class GuestStay extends Model
 {

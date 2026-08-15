@@ -178,6 +178,14 @@ a { text-decoration: none; }
 .due-chip.overdue { color:#bd4747; }
 .kanban-card-footer { align-items:center; border-top:1px solid #edf0ef; display:flex; justify-content:space-between; margin-top:13px; padding-top:11px; }
 .kanban-empty { align-items:center; border:1px dashed #cad2d4; border-radius:10px; color:#98a2a4; display:flex; flex-direction:column; font-size:10px; gap:5px; padding:24px 10px; }
+.request-detail-modal .modal-content { border:0; min-height:min(760px,calc(100vh - 3.5rem)); overflow:hidden; }
+.request-detail-modal-body { background:#f4f6f6; padding:32px; }
+.request-detail-modal-body [data-request-back] { display:none; }
+.request-detail-modal-body .sticky-lg-top { top:0 !important; }
+.request-detail-close { background-color:#fff; border-radius:50%; box-shadow:0 3px 14px rgba(28,44,48,.16); padding:10px; position:absolute; right:18px; top:18px; z-index:5; }
+.request-detail-state { align-items:center; color:#758082; display:flex; flex:1; flex-direction:column; gap:14px; justify-content:center; min-height:600px; text-align:center; }
+.request-detail-spinner { animation:request-detail-spin .75s linear infinite; border:3px solid #d7e1de; border-radius:50%; border-top-color:#397764; height:38px; width:38px; }
+@keyframes request-detail-spin { to { transform:rotate(360deg); } }
 
 /* Activity and notifications */
 .request-timeline { padding-left:5px; }
@@ -217,6 +225,10 @@ a { text-decoration: none; }
     .kanban-board { margin-left:-18px; margin-right:-18px; padding-left:18px; }
 }
 @media (max-width: 575.98px) {
+    .request-detail-modal .modal-dialog { height:100%; margin:0; max-width:none; }
+    .request-detail-modal .modal-content { border-radius:0; height:100%; min-height:100%; }
+    .request-detail-modal-body { padding:24px 16px; }
+    .request-detail-state { min-height:calc(100vh - 48px); }
     .impersonation-bar { align-items:stretch; flex-direction:column; gap:10px; }
     .impersonation-bar .btn { width:100%; }
     .page-actions .btn span { display: none; }
@@ -863,9 +875,74 @@ a { text-decoration: none; }
 .availability-results strong { color:#245e4e; font-size:12px; }
 .availability-results small { color:#73827d; font-size:9px; margin-top:2px; }
 .available-villa-list { display:flex; flex-wrap:wrap; gap:7px; justify-content:flex-end; }
-.available-villa-list span { background:#fff; border:1px solid #cfe1da; border-radius:18px; color:#2f705e; font-size:9px; font-weight:700; padding:6px 10px; }
+.available-villa-option { background:#fff; border:1px solid #cfe1da; border-radius:18px; color:#2f705e; cursor:pointer; font-size:9px; font-weight:700; padding:6px 10px; transition:background .15s,border-color .15s,transform .15s; }
+.available-villa-option:hover,.available-villa-option:focus-visible { background:#e7f3ee; border-color:#82b5a4; color:#245e4e; transform:translateY(-1px); }
 .available-villa-list i { margin-right:5px; }
 .available-villa-list em { color:#a04c4c; font-size:10px; font-style:normal; }
+
+/* Client card and printable bill */
+.client-card-heading { align-items:center; display:flex; gap:20px; justify-content:space-between; }
+.client-card-layout { align-items:start; display:grid; gap:18px; grid-template-columns:minmax(0,1.5fr) minmax(310px,.65fr); }
+.client-section-heading { align-items:center; display:flex; justify-content:space-between; }
+.client-order-list { display:flex; flex-direction:column; }
+.client-order-row { align-items:center; color:var(--hc-ink); display:flex; gap:13px; padding:15px 20px; }
+.client-order-row + .client-order-row { border-top:1px solid var(--hc-border); }
+.client-order-row:hover { background:#f8faf9; color:var(--hc-ink); }
+.client-order-icon { align-items:center; background:#e8f0ed; border-radius:11px; color:#32705e; display:flex; flex:0 0 auto; height:38px; justify-content:center; width:38px; }
+.client-order-row > span { display:flex; flex-direction:column; }
+.client-order-row strong { font-size:11px; }
+.client-order-row small { color:#7d8a85; font-size:9px; margin-top:3px; }
+.client-order-price { margin-top:6px; }
+.client-bill-picker { top:90px; }
+.client-bill-hint { color:#73827d; font-size:10px; line-height:1.5; margin:14px 0; }
+.bill-service-selection { border:1px solid var(--hc-border); border-radius:13px; overflow:hidden; }
+.bill-service-selection label { align-items:center; cursor:pointer; display:grid; gap:10px; grid-template-columns:auto 1fr auto; margin:0; padding:13px; }
+.bill-service-selection label + label { border-top:1px solid var(--hc-border); }
+.bill-service-selection label:hover { background:#f7faf8; }
+.bill-service-selection input { accent-color:#286b59; height:16px; width:16px; }
+.bill-service-selection span { display:flex; flex-direction:column; min-width:0; }
+.bill-service-selection strong { font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bill-service-selection small { color:#7d8a85; font-size:8px; margin-top:2px; }
+.bill-service-selection b { font-size:10px; white-space:nowrap; }
+.bill-selection-empty { align-items:center; color:#7d8a85; display:flex; flex-direction:column; font-size:10px; gap:8px; padding:28px 12px; text-align:center; }
+.bill-selection-empty i { font-size:22px; }
+.bill-selection-total { align-items:center; display:flex; justify-content:space-between; padding:18px 2px; }
+.bill-selection-total span { color:#73827d; font-size:10px; }
+.bill-selection-total strong { font-size:17px; }
+.print-bill-body { background:#edf1ef; color:#1e2c28; font-family:Arial,sans-serif; margin:0; min-height:100vh; padding:40px 20px; }
+.print-bill-actions { display:flex; justify-content:space-between; margin:0 auto 16px; max-width:900px; }
+.print-bill-sheet { background:#fff; box-shadow:0 18px 60px rgba(24,49,45,.12); margin:0 auto; max-width:900px; min-height:1120px; padding:64px; }
+.print-bill-header { align-items:flex-start; border-bottom:2px solid #183c36; display:flex; justify-content:space-between; padding-bottom:30px; }
+.print-bill-header > div { display:flex; flex-direction:column; }
+.print-bill-header > div:last-child { text-align:right; }
+.print-bill-mark { align-items:center; background:#183c36; border-radius:10px; color:#fff; display:flex; font-size:18px; height:42px; justify-content:center; margin-bottom:12px; width:42px; }
+.print-bill-header strong { font-size:20px; }
+.print-bill-header small,.print-bill-header span { color:#71817b; font-size:10px; margin-top:4px; }
+.print-bill-header > div:last-child > span { color:#183c36; font-size:30px; font-weight:800; letter-spacing:.12em; margin:0; }
+.print-bill-parties { background:#f3f6f4; display:grid; gap:40px; grid-template-columns:1fr 1fr; margin:30px 0; padding:22px; }
+.print-bill-parties > div { display:flex; flex-direction:column; }
+.print-bill-parties small { color:#788680; font-size:9px; font-weight:800; letter-spacing:.12em; margin-bottom:7px; }
+.print-bill-parties strong { font-size:13px; }
+.print-bill-parties span { color:#6f7d78; font-size:10px; margin-top:4px; }
+.print-bill-table { border-collapse:collapse; width:100%; }
+.print-bill-table th { border-bottom:1px solid #cfd8d3; color:#71817b; font-size:9px; letter-spacing:.08em; padding:10px; text-align:left; text-transform:uppercase; }
+.print-bill-table th:last-child,.print-bill-table td:last-child { text-align:right; }
+.print-bill-table td { border-bottom:1px solid #e8ecea; font-size:10px; padding:17px 10px; vertical-align:top; }
+.print-bill-table td:first-child { display:flex; flex-direction:column; }
+.print-bill-table td small { color:#7d8a85; font-size:8px; margin-top:3px; }
+.print-bill-empty { color:#7d8a85; padding:50px!important; text-align:center!important; }
+.print-bill-total { align-items:center; background:#183c36; color:#fff; display:flex; justify-content:flex-end; margin-left:auto; margin-top:28px; padding:18px 22px; width:310px; }
+.print-bill-total span { color:#b9c9c3; font-size:10px; margin-right:auto; text-transform:uppercase; }
+.print-bill-total strong { font-size:21px; }
+.print-bill-sheet footer { border-top:1px solid #dbe2de; color:#73817c; font-size:9px; margin-top:80px; padding-top:20px; }
+.print-bill-sheet footer p { color:#2d443d; font-size:11px; font-weight:700; margin:0 0 5px; }
+
+@media print {
+    @page { margin:12mm; size:A4; }
+    .print-bill-body { background:#fff; padding:0; }
+    .print-bill-actions { display:none; }
+    .print-bill-sheet { box-shadow:none; min-height:0; padding:0; }
+}
 
 @media (max-width:1199.98px) {
     .room-inventory-row { grid-template-columns:auto repeat(3,minmax(0,1fr)); }
@@ -873,6 +950,12 @@ a { text-decoration: none; }
 }
 
 @media (max-width:767.98px) {
+    .client-card-heading { align-items:flex-start; flex-direction:column; }
+    .client-card-layout { grid-template-columns:1fr; }
+    .client-bill-picker { position:static!important; }
+    .print-bill-body { padding:12px; }
+    .print-bill-sheet { min-height:0; padding:24px; }
+    .print-bill-parties { grid-template-columns:1fr; }
     .room-inventory-row { align-items:stretch; grid-template-columns:1fr; }
     .room-inventory-icon { display:none; }
     .room-inventory-row .room-active-toggle { grid-column:auto; }

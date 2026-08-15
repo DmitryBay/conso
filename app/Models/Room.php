@@ -35,11 +35,15 @@ class Room extends Model
 
     public function displayName(): string
     {
-        return $this->name ?: $this->number;
+        $name = trim((string) $this->name);
+
+        return $name !== '' ? $name : $this->number;
     }
 
     public function displayLabel(): string
     {
-        return $this->name ? $this->name.' · '.$this->number : $this->number;
+        $name = trim((string) $this->name);
+
+        return $name !== '' ? $name.' ('.$this->number.')' : $this->number;
     }
 }

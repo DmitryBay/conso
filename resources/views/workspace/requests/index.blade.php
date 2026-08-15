@@ -25,6 +25,14 @@
 </div>
 @endsection
 @push('modals')
+<div class="modal fade request-detail-modal" id="requestDetailModal" tabindex="-1" aria-hidden="true" data-loading-label="{{ __('workspace.loading_request') }}" data-error-label="{{ __('workspace.request_load_error') }}" data-retry-label="{{ __('workspace.retry') }}">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <button type="button" class="btn-close request-detail-close" data-bs-dismiss="modal" aria-label="{{ __('workspace.cancel') }}"></button>
+            <div class="modal-body request-detail-modal-body" data-request-modal-body></div>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="newRequestModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" method="POST" action="{{ route('workspace.requests.store') }}">@csrf<div class="modal-header"><div><h2 class="modal-title fs-5">{{ __('workspace.new_request') }}</h2><div class="text-secondary small">{{ __('workspace.manual_request_hint') }}</div></div><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="row g-3">
 <div class="col-md-4"><label class="form-label">{{ __('workspace.room') }} *</label><select class="form-select" name="room_number" required><option value="">{{ __('workspace.choose_room') }}</option>@foreach($rooms as $room)<option value="{{ $room->number }}" @selected(old('room_number')===$room->number)>{{ $room->displayLabel() }}</option>@endforeach</select></div><div class="col-md-8"><label class="form-label">{{ __('workspace.guest_name') }}</label><input class="form-control" name="guest_name" placeholder="{{ __('workspace.name_or_surname') }}"></div>
 <div class="col-md-7"><label class="form-label">{{ __('workspace.catalog_service') }}</label><select class="form-select" name="service_node_id"><option value="">{{ __('workspace.other_request') }}</option>@foreach($services as $service)<option value="{{ $service->id }}">{{ $service->localizedName() }}</option>@endforeach</select></div><div class="col-md-5"><label class="form-label">{{ __('workspace.priority_label') }} *</label><select class="form-select" name="priority">@foreach(\App\Enums\RequestPriority::cases() as $priority)<option value="{{ $priority->value }}" @selected($priority===\App\Enums\RequestPriority::Normal)>{{ __('workspace.priority.'.$priority->value) }}</option>@endforeach</select></div>
@@ -34,6 +42,111 @@
 @endpush
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded',()=>{let dragged=null;document.querySelectorAll('[data-request-card]').forEach(card=>{card.addEventListener('dragstart',()=>{dragged=card;card.classList.add('is-dragging')});card.addEventListener('dragend',()=>card.classList.remove('is-dragging'))});document.querySelectorAll('[data-kanban-column]').forEach(column=>{column.addEventListener('dragover',e=>{e.preventDefault();column.classList.add('is-over')});column.addEventListener('dragleave',()=>column.classList.remove('is-over'));column.addEventListener('drop',async e=>{e.preventDefault();column.classList.remove('is-over');if(!dragged)return;const response=await fetch(dragged.dataset.statusUrl,{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({status:column.dataset.status})});if(response.ok){column.querySelector('.kanban-cards').prepend(dragged);window.location.reload();}})});});
+document.addEventListener('DOMContentLoaded', () => {
+    let dragged = null;
+    document.querySelectorAll('[data-request-card]').forEach(card => {
+        card.addEventListener('dragstart', () => { dragged = card; card.classList.add('is-dragging'); });
+        card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
+    });
+    document.querySelectorAll('[data-kanban-column]').forEach(column => {
+        column.addEventListener('dragover', event => { event.preventDefault(); column.classList.add('is-over'); });
+        column.addEventListener('dragleave', () => column.classList.remove('is-over'));
+        column.addEventListener('drop', async event => {
+            event.preventDefault();
+            column.classList.remove('is-over');
+            if (!dragged) return;
+            const response = await fetch(dragged.dataset.statusUrl, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content},
+                body: JSON.stringify({status: column.dataset.status}),
+            });
+            if (response.ok) { column.querySelector('.kanban-cards').prepend(dragged); window.location.reload(); }
+        });
+    });
+
+    const modalElement = document.getElementById('requestDetailModal');
+    const modalBody = modalElement.querySelector('[data-request-modal-body]');
+    const detailModal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+    let currentUrl = null;
+    let boardChanged = false;
+
+    const loader = () => `<div class="request-detail-state"><span class="request-detail-spinner" aria-hidden="true"></span><span>${modalElement.dataset.loadingLabel}</span></div>`;
+    const errorState = () => `<div class="request-detail-state text-danger"><i class="bi bi-exclamation-circle fs-3"></i><span>${modalElement.dataset.errorLabel}</span><button type="button" class="btn btn-light btn-sm" data-request-retry>${modalElement.dataset.retryLabel}</button></div>`;
+
+    const loadRequest = async url => {
+        currentUrl = url;
+        modalBody.innerHTML = loader();
+        modalElement.setAttribute('aria-busy', 'true');
+        try {
+            const response = await fetch(url, {
+                headers: {'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!response.ok) throw new Error('Request loading failed');
+            const documentFragment = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const detail = documentFragment.querySelector('[data-request-detail]');
+            if (!detail) throw new Error('Request detail not found');
+            modalBody.replaceChildren(detail);
+        } catch (error) {
+            modalBody.innerHTML = errorState();
+        } finally {
+            modalElement.removeAttribute('aria-busy');
+        }
+    };
+
+    document.querySelectorAll('[data-request-modal-link]').forEach(link => link.addEventListener('click', event => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        detailModal.show();
+        loadRequest(link.href);
+    }));
+
+    modalBody.addEventListener('click', event => {
+        if (event.target.closest('[data-request-retry]') && currentUrl) loadRequest(currentUrl);
+    });
+
+    modalBody.addEventListener('submit', async event => {
+        const form = event.target.closest('form');
+        if (!form) return;
+        event.preventDefault();
+        const submitButton = event.submitter;
+        submitButton?.setAttribute('disabled', 'disabled');
+        modalElement.setAttribute('aria-busy', 'true');
+        try {
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin',
+                body: new FormData(form),
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const message = Object.values(payload.errors || {}).flat()[0] || payload.message || modalElement.dataset.errorLabel;
+                throw new Error(message);
+            }
+            boardChanged = true;
+            await loadRequest(currentUrl);
+        } catch (error) {
+            let alert = modalBody.querySelector('[data-request-form-error]');
+            if (!alert) {
+                alert = document.createElement('div');
+                alert.className = 'alert alert-danger mb-3';
+                alert.dataset.requestFormError = '';
+                modalBody.prepend(alert);
+            }
+            alert.textContent = error.message;
+        } finally {
+            submitButton?.removeAttribute('disabled');
+            modalElement.removeAttribute('aria-busy');
+        }
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        modalBody.replaceChildren();
+        currentUrl = null;
+        if (boardChanged) window.location.reload();
+    });
+});
 </script>
 @endpush

@@ -30,7 +30,11 @@ class RoomInventoryTest extends TestCase
 
         $room = Room::firstOrFail();
         $this->assertSame('Coral Villa', $room->displayName());
-        $this->assertSame('Coral Villa · CV-305', $room->displayLabel());
+        $this->assertSame('Coral Villa (CV-305)', $room->displayLabel());
+
+        $unnamedRoom = new Room(['number' => 'CV-306']);
+        $this->assertSame('CV-306', $unnamedRoom->displayName());
+        $this->assertSame('CV-306', $unnamedRoom->displayLabel());
         $this->assertSame(1, $company->fresh()->rooms_count);
 
         $this->put(route('workspace.rooms.update', $room), [

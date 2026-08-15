@@ -81,4 +81,12 @@ class ServiceRequest extends Model
     {
         return $this->guestStay?->room?->displayName() ?? $this->room_number;
     }
+
+    public function roomDisplayLabel(): string
+    {
+        $room = $this->guestStay?->room ?? $this->guestSession?->room;
+        $room ??= Room::where('company_id', $this->company_id)->where('number', $this->room_number)->first();
+
+        return $room?->displayLabel() ?? $this->room_number;
+    }
 }

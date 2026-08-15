@@ -89,7 +89,11 @@ Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:compan
     Route::patch('requests/{serviceRequest}/archive', [ServiceRequestController::class, 'archive'])->name('requests.archive');
 
     Route::get('stays', [GuestStayController::class, 'index'])->name('stays.index');
+    Route::get('stays/availability', [GuestStayController::class, 'availability'])->name('stays.availability');
     Route::post('stays', [GuestStayController::class, 'store'])->name('stays.store');
+    Route::get('stays/{guestStay}', [GuestStayController::class, 'show'])->name('stays.show');
+    Route::patch('stays/{guestStay}', [GuestStayController::class, 'update'])->name('stays.update');
+    Route::get('stays/{guestStay}/bill', [GuestStayController::class, 'bill'])->name('stays.bill');
     Route::patch('stays/{guestStay}/extend', [GuestStayController::class, 'extend'])->name('stays.extend');
     Route::patch('stays/{guestStay}/pin', [GuestStayController::class, 'updatePin'])->name('stays.pin');
     Route::patch('stays/{guestStay}/checkout', [GuestStayController::class, 'checkout'])->name('stays.checkout');

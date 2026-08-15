@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Enums\GuestStayStatus;
+use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\GuestStay;
 use App\Models\Room;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -52,25 +54,58 @@ class GuestStayController extends Controller
         if ($availabilityRequested) {
             $availableFrom = Carbon::createFromFormat('Y-m-d', $filters['available_from'], $company->timezone)->startOfDay()->utc();
             $availableTo = Carbon::createFromFormat('Y-m-d', $filters['available_to'], $company->timezone)->startOfDay()->utc();
-            $busyRoomIds = GuestStay::where('company_id', $companyId)
-                ->whereIn('status', [GuestStayStatus::Upcoming, GuestStayStatus::CheckedIn])
-                ->where('check_in_at', '<', $availableTo->copy()->addDay())
-                ->where('check_out_at', '>', $availableFrom->copy()->subDay())
-                ->get()
-                ->filter(function (GuestStay $stay) use ($availableFrom, $availableTo, $company): bool {
-                    $stayFrom = $stay->check_in_at->copy()->setTimezone($company->timezone)->startOfDay()->utc();
-                    $stayTo = $stay->check_out_at->copy()->setTimezone($company->timezone)->startOfDay()->utc();
-
-                    return $stayFrom->lt($availableTo) && $stayTo->gt($availableFrom);
-                })
-                ->pluck('room_id');
-            $availableRooms = $rooms->whereNotIn('id', $busyRoomIds)->values();
+            $availableRooms = $this->findAvailableRooms($companyId, $rooms, $availableFrom, $availableTo, $company->timezone);
         }
 
         return view('workspace.stays.index', compact(
             'rooms', 'stays', 'calendar', 'calendarStart', 'selectedRoomId',
             'availabilityRequested', 'availableRooms',
         ));
+    }
+
+    public function availability(Request $request): JsonResponse
+    {
+        $company = $request->user()->company;
+        $filters = $request->validate([
+            'available_from' => ['required', 'date_format:Y-m-d'],
+            'available_to' => ['required', 'date_format:Y-m-d', 'after:available_from'],
+        ]);
+        $rooms = Room::where('company_id', $company->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->orderBy('number')
+            ->get();
+        $availableFrom = Carbon::createFromFormat('Y-m-d', $filters['available_from'], $company->timezone)->startOfDay()->utc();
+        $availableTo = Carbon::createFromFormat('Y-m-d', $filters['available_to'], $company->timezone)->startOfDay()->utc();
+        $availableRooms = $this->findAvailableRooms($company->id, $rooms, $availableFrom, $availableTo, $company->timezone);
+
+        return response()->json([
+            'count_label' => trans_choice('workspace.available_villas_count', $availableRooms->count(), ['count' => $availableRooms->count()]),
+            'period_label' => Carbon::parse($filters['available_from'])->format('d.m.Y').' — '.Carbon::parse($filters['available_to'])->format('d.m.Y'),
+            'empty_label' => __('workspace.no_available_villas'),
+            'rooms' => $availableRooms->map(fn (Room $room): array => [
+                'id' => $room->id,
+                'label' => $room->displayLabel(),
+            ])->values(),
+        ]);
+    }
+
+    private function findAvailableRooms(int $companyId, Collection $rooms, Carbon $availableFrom, Carbon $availableTo, string $timezone): Collection
+    {
+        $busyRoomIds = GuestStay::where('company_id', $companyId)
+            ->whereIn('status', [GuestStayStatus::Upcoming, GuestStayStatus::CheckedIn])
+            ->where('check_in_at', '<', $availableTo->copy()->addDay())
+            ->where('check_out_at', '>', $availableFrom->copy()->subDay())
+            ->get()
+            ->filter(function (GuestStay $stay) use ($availableFrom, $availableTo, $timezone): bool {
+                $stayFrom = $stay->check_in_at->copy()->setTimezone($timezone)->startOfDay()->utc();
+                $stayTo = $stay->check_out_at->copy()->setTimezone($timezone)->startOfDay()->utc();
+
+                return $stayFrom->lt($availableTo) && $stayTo->gt($availableFrom);
+            })
+            ->pluck('room_id');
+
+        return $rooms->whereNotIn('id', $busyRoomIds)->values();
     }
 
     private function buildCalendar(Collection $rooms, Collection $stays, Carbon $start, Carbon $end, string $timezone): array
@@ -135,6 +170,8 @@ class GuestStayController extends Controller
         $data = $request->validate([
             'room_id' => ['required', 'integer'],
             'guest_name' => ['required', 'string', 'max:160'],
+            'guest_email' => ['nullable', 'email', 'max:190'],
+            'emergency_phone' => ['nullable', 'string', 'max:40'],
             'check_in_at' => ['required', 'date'],
             'nights' => ['required', 'integer', 'min:1', 'max:90'],
             'access_pin' => ['nullable', 'digits_between:4,8'],
@@ -159,6 +196,8 @@ class GuestStayController extends Controller
             'company_id' => $company->id,
             'room_id' => $room->id,
             'guest_name' => $data['guest_name'],
+            'guest_email' => $data['guest_email'] ?? null,
+            'emergency_phone' => $data['emergency_phone'] ?? null,
             'check_in_at' => $checkIn,
             'check_out_at' => $checkOut,
             'nights' => (int) $data['nights'],
@@ -167,7 +206,56 @@ class GuestStayController extends Controller
             'status' => $checkIn->lte(now()) ? GuestStayStatus::CheckedIn : GuestStayStatus::Upcoming,
         ]);
 
-        return back()->with('success', __('workspace.stay_created'))->with('stay_pin', $pin)->with('stay_room', $room->displayName());
+        return back()->with('success', __('workspace.stay_created'))->with('stay_pin', $pin)->with('stay_room', $room->displayLabel());
+    }
+
+    public function show(Request $request, GuestStay $guestStay): View
+    {
+        $this->ensureTenant($request, $guestStay);
+        $guestStay->load(['room', 'requests.items.service', 'requests.assignee']);
+        $orders = $guestStay->requests->sortByDesc('created_at')->values();
+        $billableOrders = $orders->filter(fn ($order) => $order->price_minor > 0
+            && $order->status !== RequestStatus::Cancelled
+            && in_array($order->payment_status, ['paid', 'invoiced'], true));
+
+        return view('workspace.stays.show', compact('guestStay', 'orders', 'billableOrders'));
+    }
+
+    public function update(Request $request, GuestStay $guestStay): RedirectResponse
+    {
+        $this->ensureTenant($request, $guestStay);
+        $data = $request->validate([
+            'guest_name' => ['required', 'string', 'max:160'],
+            'guest_email' => ['nullable', 'email', 'max:190'],
+            'emergency_phone' => ['nullable', 'string', 'max:40'],
+            'internal_notes' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $guestStay->update($data);
+
+        return back()->with('success', __('workspace.client_card_saved'));
+    }
+
+    public function bill(Request $request, GuestStay $guestStay): View
+    {
+        $this->ensureTenant($request, $guestStay);
+        $data = $request->validate([
+            'selection' => ['nullable', 'boolean'],
+            'order_ids' => ['nullable', 'array'],
+            'order_ids.*' => ['integer', 'distinct'],
+        ]);
+        $selectedIds = collect($data['order_ids'] ?? [])->map(fn ($id) => (int) $id);
+        $orders = $guestStay->requests()
+            ->where('price_minor', '>', 0)
+            ->where('status', '!=', RequestStatus::Cancelled)
+            ->whereIn('payment_status', ['paid', 'invoiced'])
+            ->when(($data['selection'] ?? false) && $selectedIds->isEmpty(), fn ($query) => $query->whereRaw('1 = 0'))
+            ->when($selectedIds->isNotEmpty(), fn ($query) => $query->whereIn('id', $selectedIds))
+            ->with('items.service')
+            ->oldest()
+            ->get();
+        $total = (int) $orders->sum('price_minor');
+
+        return view('workspace.stays.bill', compact('guestStay', 'orders', 'total'));
     }
 
     public function extend(Request $request, GuestStay $guestStay): RedirectResponse
@@ -227,7 +315,7 @@ class GuestStayController extends Controller
 
         return back()->with('success', __('workspace.pin_updated'))
             ->with('stay_pin', $pin)
-            ->with('stay_room', $guestStay->room->displayName());
+            ->with('stay_room', $guestStay->room->displayLabel());
     }
 
     private function ensureTenant(Request $request, GuestStay $stay): void

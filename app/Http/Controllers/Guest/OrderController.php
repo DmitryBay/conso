@@ -138,7 +138,7 @@ class OrderController extends Controller
                 new WorkspaceNotification([
                     'title_key' => 'workspace.notification_guest_confirmed',
                     'body_key' => 'workspace.notification_guest_confirmed_body',
-                    'params' => ['room' => $order->roomDisplayName(), 'request' => $order->title],
+                    'params' => ['room' => $order->roomDisplayLabel(), 'request' => $order->title],
                     'request_id' => $order->id,
                     'url' => route('workspace.requests.show', $order),
                     'icon' => 'bi-person-check',

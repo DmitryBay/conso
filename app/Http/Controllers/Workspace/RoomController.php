@@ -63,8 +63,8 @@ class RoomController extends Controller
         ]);
 
         $data = array_map(fn ($value) => is_string($value) ? trim($value) : $value, $data);
-        $data['name'] = $data['name'] ?? null;
-        $data['floor'] = $data['floor'] ?? null;
+        $data['name'] = ($data['name'] ?? '') !== '' ? $data['name'] : null;
+        $data['floor'] = ($data['floor'] ?? '') !== '' ? $data['floor'] : null;
 
         $identifiers = array_filter([$data['number'], $data['name']]);
         $conflict = Room::where('company_id', $companyId)

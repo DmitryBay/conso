@@ -87,7 +87,7 @@ class ServiceRequestController extends Controller
         });
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_new', 'workspace.notification_room_request', [
-            'room' => $room->displayName(),
+            'room' => $room->displayLabel(),
             'request' => $serviceRequest->title,
         ]);
         ServiceRequestChanged::dispatch($serviceRequest, 'created');
@@ -126,7 +126,7 @@ class ServiceRequestController extends Controller
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_taken', 'workspace.notification_taken_body', [
             'actor' => $request->user()->name,
-            'room' => $serviceRequest->roomDisplayName(),
+            'room' => $serviceRequest->roomDisplayLabel(),
         ]);
         $this->notifyGuest($serviceRequest);
         ServiceRequestChanged::dispatch($serviceRequest->fresh(), 'taken');
@@ -189,7 +189,7 @@ class ServiceRequestController extends Controller
         $serviceRequest->refresh();
 
         $this->notifyCompany($request->user(), $serviceRequest, 'workspace.notification_status_changed', 'workspace.notification_status_body', [
-            'room' => $serviceRequest->roomDisplayName(),
+            'room' => $serviceRequest->roomDisplayLabel(),
             'status' => $to->value,
         ]);
         if ($from !== $to) {

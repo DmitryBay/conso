@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\GuestSession;
 use App\Models\GuestStay;
 use App\Models\Room;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -176,6 +177,85 @@ class GuestStayManagementTest extends TestCase
             'available_to' => $from->copy()->addDays(3)->format('Y-m-d'),
         ]))->assertOk()
             ->assertSee(trans_choice('workspace.available_villas_count', 2, ['count' => 2]));
+    }
+
+    public function test_availability_ajax_endpoint_returns_prefill_data_for_free_rooms(): void
+    {
+        [$company, $room, $manager] = $this->hotel();
+        $freeRoom = Room::create([
+            'company_id' => $company->id, 'number' => '306', 'name' => 'Garden Villa',
+            'pin_hash' => Hash::make('legacy'), 'is_active' => true,
+        ]);
+        $from = now($company->timezone)->addDay()->startOfDay();
+        GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Busy guest', 'check_in_at' => $from->copy()->utc(),
+            'check_out_at' => $from->copy()->addDays(2)->utc(), 'nights' => 2,
+            'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::Upcoming,
+        ]);
+
+        $this->actingAs($manager)->getJson(route('workspace.stays.availability', [
+            'available_from' => $from->format('Y-m-d'),
+            'available_to' => $from->copy()->addDays(2)->format('Y-m-d'),
+        ]))->assertOk()
+            ->assertJsonPath('rooms.0.id', $freeRoom->id)
+            ->assertJsonPath('rooms.0.label', $freeRoom->displayLabel())
+            ->assertJsonCount(1, 'rooms');
+    }
+
+    public function test_manager_can_update_client_card_and_print_selected_paid_services_in_english(): void
+    {
+        [$company, $room, $manager] = $this->hotel();
+        $stay = GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Anna Petrova', 'check_in_at' => now()->subDay(), 'check_out_at' => now()->addDay(),
+            'nights' => 2, 'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::CheckedIn,
+        ]);
+        $included = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'guest_stay_id' => $stay->id,
+            'source' => 'guest', 'room_number' => $room->number, 'guest_name' => $stay->guest_name,
+            'title' => 'Airport transfer', 'status' => 'completed', 'priority' => 'normal',
+            'price_minor' => 450000, 'payment_method' => 'cash', 'payment_status' => 'paid',
+        ]);
+        $excluded = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'guest_stay_id' => $stay->id,
+            'source' => 'guest', 'room_number' => $room->number, 'guest_name' => $stay->guest_name,
+            'title' => 'Dinner', 'status' => 'completed', 'priority' => 'normal',
+            'price_minor' => 300000, 'payment_method' => 'cash', 'payment_status' => 'paid',
+        ]);
+
+        $this->actingAs($manager)->patch(route('workspace.stays.update', $stay), [
+            'guest_name' => 'Anna Petrova',
+            'guest_email' => 'anna@example.com',
+            'emergency_phone' => '+62 812 3456 7890',
+            'internal_notes' => 'Allergic to peanuts. Contact only after 09:00.',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertDatabaseHas('guest_stays', [
+            'id' => $stay->id,
+            'emergency_phone' => '+62 812 3456 7890',
+            'internal_notes' => 'Allergic to peanuts. Contact only after 09:00.',
+        ]);
+        $this->get(route('workspace.stays.show', $stay))->assertOk()
+            ->assertSee('Anna Petrova')
+            ->assertSee('Airport transfer')
+            ->assertSee('Dinner');
+        $this->get(route('workspace.stays.bill', ['guestStay' => $stay, 'order_ids' => [$included->id]]))
+            ->assertOk()
+            ->assertSee('BILL')
+            ->assertSee('Airport transfer')
+            ->assertDontSee('Dinner')
+            ->assertSee('Rp 450.000');
+
+        $otherCompany = Company::create([
+            'public_id' => (string) Str::uuid(), 'name' => 'Other Hotel', 'slug' => 'other-hotel',
+            'status' => CompanyStatus::Active, 'currency' => 'IDR', 'timezone' => 'Asia/Makassar', 'plan' => 'MVP',
+        ]);
+        $otherManager = User::factory()->create([
+            'company_id' => $otherCompany->id, 'role' => UserRole::Manager, 'is_active' => true,
+        ]);
+        $this->actingAs($otherManager)->get(route('workspace.stays.show', $stay))->assertNotFound();
+        $this->get(route('workspace.stays.bill', $stay))->assertNotFound();
     }
 
     private function hotel(): array

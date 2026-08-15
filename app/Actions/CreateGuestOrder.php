@@ -66,7 +66,7 @@ class CreateGuestOrder
             new WorkspaceNotification([
                 'title_key' => 'workspace.notification_guest_order',
                 'body_key' => 'workspace.notification_room_request',
-                'params' => ['room' => $stay->room->displayName(), 'request' => $order->title],
+                'params' => ['room' => $stay->room->displayLabel(), 'request' => $order->title],
                 'request_id' => $order->id,
                 'url' => route('workspace.requests.show', $order),
                 'icon' => 'bi-bag-check',

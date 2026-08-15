@@ -28,6 +28,23 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->actingAs($ownerA)->get(route('workspace.requests.show', $foreignRequest))->assertNotFound();
     }
 
+    public function test_request_board_exposes_ajax_modal_and_detail_fragment(): void
+    {
+        [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
+        $item = $this->request($company);
+
+        $this->actingAs($owner)->get(route('workspace.requests.index'))
+            ->assertOk()
+            ->assertSee('data-request-modal-link', false)
+            ->assertSee('id="requestDetailModal"', false)
+            ->assertSee('data-loading-label=', false);
+
+        $this->actingAs($owner)->get(route('workspace.requests.show', $item))
+            ->assertOk()
+            ->assertSee('data-request-detail', false)
+            ->assertSee('Extra towels');
+    }
+
     public function test_foreign_category_cannot_be_used_as_parent(): void
     {
         [$companyA, $ownerA] = $this->companyWithOwner('Alpha Hotel');
