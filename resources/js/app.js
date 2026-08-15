@@ -120,6 +120,12 @@ if (pushSettings) {
             toggleButton.disabled = true;
             return;
         }
+        if (!subscription && Notification.permission === 'granted') {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: decodeKey(publicKey),
+            });
+        }
         if (subscription) {
             const data = subscription.toJSON();
             await request(storeUrl, 'POST', {

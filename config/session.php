@@ -32,7 +32,9 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // Browsers cap persistent cookies at roughly 400 days. Guest access is
+    // still revoked independently when the stay ends or the PIN changes.
+    'lifetime' => (int) env('SESSION_LIFETIME', 576000),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
