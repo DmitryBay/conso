@@ -59,8 +59,10 @@ class OrderController extends Controller
         /** @var GuestSession $stay */
         $stay = app('guestStay');
         $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)
+            ->with('items.service')
             ->latest()
-            ->get(['public_id', 'status', 'payment_status', 'updated_at']);
+            ->get();
+        $money = app(\App\Support\Money::class);
 
         return response()->json([
             'orders' => $orders->map(fn (ServiceRequest $order) => [
@@ -68,6 +70,19 @@ class OrderController extends Controller
                 'status' => $order->status->value,
                 'payment_status' => $order->payment_status,
                 'updated_at' => $order->updated_at?->toISOString(),
+                'status_label' => __('guest.status.'.$order->status->value),
+                'status_hint' => $this->statusHint($order->status),
+                'hero_icon' => in_array($order->status, [RequestStatus::Ready, RequestStatus::Completed], true)
+                    ? 'bi-check-lg'
+                    : ($order->status === RequestStatus::Cancelled ? 'bi-x-lg' : 'bi-bell'),
+                'requires_confirmation' => in_array($order->status, [RequestStatus::Ready, RequestStatus::WaitingGuest], true),
+                'show_bill' => $order->status === RequestStatus::Completed && $order->payment_status === 'invoiced',
+                'card_html' => view('guest.orders._card', [
+                    'company' => $company,
+                    'order' => $order,
+                    'money' => $money,
+                ])->render(),
+                'detail_progress_html' => view('guest.orders._progress', ['order' => $order])->render(),
             ])->values(),
         ])->header('Cache-Control', 'no-store, private');
     }
@@ -164,5 +179,18 @@ class OrderController extends Controller
     private function ensureOrder(Company $company, ServiceRequest $serviceRequest, GuestSession $stay): void
     {
         abort_unless($serviceRequest->guest_stay_id === $stay->guest_stay_id && $serviceRequest->company_id === $company->id, 404);
+    }
+
+    private function statusHint(RequestStatus $status): string
+    {
+        return match ($status) {
+            RequestStatus::New => __('guest.team_received'),
+            RequestStatus::Accepted => __('guest.accepted_hint'),
+            RequestStatus::InProgress => __('guest.progress_hint'),
+            RequestStatus::WaitingGuest => __('guest.waiting_hint'),
+            RequestStatus::Ready => __('guest.ready_hint'),
+            RequestStatus::Completed => __('guest.completed_hint'),
+            RequestStatus::Cancelled => __('guest.cancelled_hint'),
+        };
     }
 }

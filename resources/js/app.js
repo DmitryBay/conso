@@ -103,6 +103,7 @@ const ordersStatusUrl = document.querySelector('meta[name="guest-orders-status-u
 if (ordersPoller && ordersStatusUrl) {
     const refreshButton = document.querySelector('[data-orders-refresh]');
     const refreshStatus = document.querySelector('[data-orders-refresh-status]');
+    const ordersList = document.querySelector('[data-orders-list]');
     let requestInFlight = false;
 
     const localOrders = () => new Map(
@@ -112,7 +113,7 @@ if (ordersPoller && ordersStatusUrl) {
         }])
     );
 
-    const changed = remoteOrders => {
+    const hasChanges = remoteOrders => {
         const local = localOrders();
         const currentOrderId = ordersPoller.dataset.orderId;
         if (currentOrderId) {
@@ -126,6 +127,42 @@ if (ordersPoller && ordersStatusUrl) {
             const current = local.get(order.id);
             return !current || order.status !== current.status || (order.payment_status || '') !== current.payment_status;
         });
+    };
+
+    const updateDetail = order => {
+        ordersPoller.dataset.orderStatus = order.status;
+        ordersPoller.dataset.paymentStatus = order.payment_status || '';
+
+        const hero = document.querySelector('[data-order-hero]');
+        if (hero) {
+            [...hero.classList].filter(name => name.startsWith('status-')).forEach(name => hero.classList.remove(name));
+            hero.classList.add('status-' + order.status);
+            hero.querySelector('.order-hero-icon i').className = 'bi ' + order.hero_icon;
+            hero.querySelector('h2').textContent = order.status_label;
+            hero.querySelector('p').textContent = order.status_hint;
+        }
+
+        const progress = document.querySelector('[data-order-detail-progress]');
+        if (progress) progress.innerHTML = order.detail_progress_html;
+        const confirm = document.querySelector('[data-order-confirm]');
+        if (confirm) confirm.hidden = !order.requires_confirmation;
+        const bill = document.querySelector('[data-order-bill]');
+        if (bill) bill.hidden = !order.show_bill;
+    };
+
+    const applyUpdates = remoteOrders => {
+        const currentOrderId = ordersPoller.dataset.orderId;
+        if (currentOrderId) {
+            const order = remoteOrders.find(item => item.id === currentOrderId);
+            if (order) updateDetail(order);
+            return;
+        }
+
+        if (ordersList && remoteOrders.length) {
+            ordersList.innerHTML = '<div class="guest-order-list">'
+                + remoteOrders.map(order => order.card_html).join('')
+                + '</div>';
+        }
     };
 
     const announce = message => {
@@ -147,12 +184,13 @@ if (ordersPoller && ordersStatusUrl) {
             if (!response.ok) throw new Error('Status request failed');
             const payload = await response.json();
 
-            if (changed(payload.orders || [])) {
+            const remoteOrders = payload.orders || [];
+            if (hasChanges(remoteOrders)) {
+                applyUpdates(remoteOrders);
                 announce(ordersPoller.dataset.updatedMessage);
-                window.location.reload();
-                return;
+            } else if (manual) {
+                announce(ordersPoller.dataset.currentMessage);
             }
-            if (manual) announce(ordersPoller.dataset.currentMessage);
         } catch {
             if (manual) announce(ordersPoller.dataset.errorMessage);
         } finally {
@@ -165,7 +203,7 @@ if (ordersPoller && ordersStatusUrl) {
     refreshButton?.addEventListener('click', () => checkStatuses(true));
     window.setInterval(() => {
         if (document.visibilityState === 'visible') checkStatuses(false);
-    }, 15000);
+    }, 30000);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkStatuses(false);
     });

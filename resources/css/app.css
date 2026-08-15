@@ -439,7 +439,7 @@ a { text-decoration: none; }
 .guest-page-heading h1 { font-size:28px; font-weight:760; letter-spacing:-.035em; margin:2px 0 0; }
 .guest-page-heading.no-back { margin-left:0; }
 .guest-page-heading.no-back > div:first-child { flex:1; }
-.guest-refresh-button { align-items:center; background:#fff; border:1px solid var(--guest-line); border-radius:11px; color:var(--guest-green); display:flex; font-size:10px; font-weight:750; gap:7px; min-height:40px; padding:0 13px; }
+.guest-refresh-button { align-items:center; background:#fff; border:1px solid var(--guest-line); border-radius:11px; color:var(--guest-green); display:flex; flex:0 0 auto; font-size:10px; font-weight:750; gap:7px; margin-inline-start:auto; min-height:40px; padding:0 13px; }
 .guest-refresh-button:hover { background:#f7f9f6; border-color:#c8d4cf; }
 .guest-refresh-button.is-refreshing i { animation:guest-refresh-spin .7s linear infinite; }
 @keyframes guest-refresh-spin { to { transform:rotate(360deg); } }
