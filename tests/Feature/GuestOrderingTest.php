@@ -180,6 +180,9 @@ class GuestOrderingTest extends TestCase
             ->assertDontSee('workspace.history_guest');
         $this->get(route('guest.orders.index', $company).'?lang=ru')
             ->assertOk()
+            ->assertSee('Обновить')
+            ->assertSee('data-order-status-poller', false)
+            ->assertSee('data-order-id="'.$order->public_id.'"', false)
             ->assertSee('Ожидает принятия в работу')
             ->assertSee('Ход выполнения')
             ->assertSee('order-progress-segments', false)
@@ -233,6 +236,87 @@ class GuestOrderingTest extends TestCase
             ->assertSee('Rp 420.000')
             ->assertSee('≈ $25.45');
         Event::assertDispatched(ServiceRequestChanged::class);
+    }
+
+    public function test_guest_status_poll_only_returns_orders_for_the_current_stay(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $stayA = $this->stay($company, $room, 'Anna');
+        $stayB = $this->stay($company, $room, 'Maria');
+        $orderA = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'guest_stay_id' => $stayA->guest_stay_id,
+            'guest_session_id' => $stayA->id,
+            'room_number' => $room->number,
+            'title' => 'Anna order',
+            'status' => RequestStatus::InProgress,
+            'priority' => 'normal',
+            'payment_status' => 'pending',
+        ]);
+        $orderB = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'guest_stay_id' => $stayB->guest_stay_id,
+            'guest_session_id' => $stayB->id,
+            'room_number' => $room->number,
+            'title' => 'Maria order',
+            'status' => RequestStatus::Ready,
+            'priority' => 'normal',
+            'payment_status' => 'pending',
+        ]);
+
+        $this->withSession(['guest_session.'.$company->id => $stayA->public_id])
+            ->getJson(route('guest.orders.statuses', $company))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertJsonCount(1, 'orders')
+            ->assertJsonPath('orders.0.id', $orderA->public_id)
+            ->assertJsonPath('orders.0.status', RequestStatus::InProgress->value)
+            ->assertJsonMissing(['id' => $orderB->public_id]);
+    }
+
+    public function test_cancelled_room_charge_is_voided_and_removed_from_the_guest_bill(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $owner = User::factory()->create([
+            'company_id' => $company->id,
+            'role' => UserRole::CompanyOwner,
+            'is_active' => true,
+        ]);
+        $stay = $this->stay($company, $room);
+        $order = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'guest_stay_id' => $stay->guest_stay_id,
+            'guest_session_id' => $stay->id,
+            'room_number' => $room->number,
+            'title' => 'Cancelled room dinner',
+            'status' => RequestStatus::Completed,
+            'priority' => 'normal',
+            'price_minor' => 480000,
+            'payment_method' => 'room_charge',
+            'payment_status' => 'invoiced',
+            'completed_at' => now(),
+        ]);
+        $session = ['guest_session.'.$company->id => $stay->public_id];
+
+        $this->withSession($session)->get(route('guest.bill', $company))
+            ->assertOk()
+            ->assertSee('Cancelled room dinner')
+            ->assertSee('Rp 480.000');
+
+        $this->actingAs($owner)->patch(route('workspace.requests.status', $order), [
+            'status' => RequestStatus::Cancelled->value,
+        ])->assertRedirect();
+
+        $this->assertSame(RequestStatus::Cancelled, $order->refresh()->status);
+        $this->assertSame('cancelled', $order->payment_status);
+        $this->withSession($session)->get(route('guest.bill', $company))
+            ->assertOk()
+            ->assertSee('Начислений на номер пока нет')
+            ->assertDontSee('Cancelled room dinner')
+            ->assertDontSee('Rp 480.000');
     }
 
     public function test_manager_can_confirm_a_ready_guest_order_and_add_it_to_the_room_bill(): void

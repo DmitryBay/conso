@@ -15,10 +15,36 @@ if (guestKiosk) {
     document.addEventListener('gesturestart', event => event.preventDefault());
 }
 
-if ('serviceWorker' in navigator && window.isSecureContext) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/guest-sw.js', { scope: '/guest/' }).catch(() => {});
+const serviceWorkerUrl = document.querySelector('meta[name="webpush-service-worker"]')?.content;
+const serviceWorkerScope = document.querySelector('meta[name="webpush-scope"]')?.content;
+let serviceWorkerRegistration;
+
+const registerServiceWorker = () => {
+    if (!serviceWorkerUrl || !serviceWorkerScope || !('serviceWorker' in navigator) || !window.isSecureContext) {
+        return Promise.resolve(null);
+    }
+
+    serviceWorkerRegistration ??= navigator.serviceWorker.register(serviceWorkerUrl, {
+        scope: serviceWorkerScope,
+        updateViaCache: 'none',
+    }).then(registration => {
+        registration.update().catch(() => {});
+        return registration;
     });
+
+    return serviceWorkerRegistration;
+};
+
+if (serviceWorkerUrl && 'serviceWorker' in navigator && window.isSecureContext) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const reloadKey = 'service-worker-reloading';
+    window.setTimeout(() => sessionStorage.removeItem(reloadKey), 5000);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || sessionStorage.getItem(reloadKey)) return;
+        sessionStorage.setItem(reloadKey, '1');
+        window.location.reload();
+    });
+    window.addEventListener('load', () => registerServiceWorker().catch(() => {}));
 }
 
 document.querySelectorAll('[data-guest-menu]').forEach(menu => {
@@ -44,7 +70,7 @@ document.querySelectorAll('[data-guest-menu]').forEach(menu => {
     const goTo = index => {
         const target = pages[Math.max(0, Math.min(index, pages.length - 1))];
         if (!target) return;
-        track.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
+        track.scrollTo({ top: target.offsetTop - pages[0].offsetTop, behavior: 'smooth' });
         update(pages.indexOf(target));
     };
 
@@ -55,14 +81,88 @@ document.querySelectorAll('[data-guest-menu]').forEach(menu => {
         cancelAnimationFrame(scrollFrame);
         scrollFrame = requestAnimationFrame(() => {
             const closest = pages.reduce((best, page, index) => (
-                Math.abs(page.offsetLeft - track.scrollLeft) < Math.abs(pages[best].offsetLeft - track.scrollLeft) ? index : best
+                Math.abs(page.offsetTop - pages[0].offsetTop - track.scrollTop) < Math.abs(pages[best].offsetTop - pages[0].offsetTop - track.scrollTop) ? index : best
             ), 0);
             update(closest);
         });
     }, { passive: true });
-    window.addEventListener('resize', () => track.scrollTo({ left: pages[activePage]?.offsetLeft ?? 0 }));
+    window.addEventListener('resize', () => track.scrollTo({ top: (pages[activePage]?.offsetTop ?? pages[0].offsetTop) - pages[0].offsetTop }));
     update(0);
 });
+
+const ordersPoller = document.querySelector('[data-order-status-poller]');
+const ordersStatusUrl = document.querySelector('meta[name="guest-orders-status-url"]')?.content;
+
+if (ordersPoller && ordersStatusUrl) {
+    const refreshButton = document.querySelector('[data-orders-refresh]');
+    const refreshStatus = document.querySelector('[data-orders-refresh-status]');
+    let requestInFlight = false;
+
+    const localOrders = () => new Map(
+        [...document.querySelectorAll('[data-order-id]')].map(element => [element.dataset.orderId, {
+            status: element.dataset.orderStatus,
+            payment_status: element.dataset.paymentStatus || '',
+        }])
+    );
+
+    const changed = remoteOrders => {
+        const local = localOrders();
+        const currentOrderId = ordersPoller.dataset.orderId;
+        if (currentOrderId) {
+            const remote = remoteOrders.find(order => order.id === currentOrderId);
+            const current = local.get(currentOrderId);
+            return !remote || !current || remote.status !== current.status || (remote.payment_status || '') !== current.payment_status;
+        }
+
+        if (remoteOrders.length !== local.size) return true;
+        return remoteOrders.some(order => {
+            const current = local.get(order.id);
+            return !current || order.status !== current.status || (order.payment_status || '') !== current.payment_status;
+        });
+    };
+
+    const announce = message => {
+        if (refreshStatus) refreshStatus.textContent = message;
+    };
+
+    const checkStatuses = async manual => {
+        if (requestInFlight) return;
+        requestInFlight = true;
+        refreshButton?.setAttribute('aria-busy', 'true');
+        refreshButton?.classList.add('is-refreshing');
+
+        try {
+            const response = await fetch(ordersStatusUrl, {
+                headers: { Accept: 'application/json' },
+                cache: 'no-store',
+                credentials: 'same-origin',
+            });
+            if (!response.ok) throw new Error('Status request failed');
+            const payload = await response.json();
+
+            if (changed(payload.orders || [])) {
+                announce(ordersPoller.dataset.updatedMessage);
+                window.location.reload();
+                return;
+            }
+            if (manual) announce(ordersPoller.dataset.currentMessage);
+        } catch {
+            if (manual) announce(ordersPoller.dataset.errorMessage);
+        } finally {
+            requestInFlight = false;
+            refreshButton?.removeAttribute('aria-busy');
+            refreshButton?.classList.remove('is-refreshing');
+        }
+    };
+
+    refreshButton?.addEventListener('click', () => checkStatuses(true));
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible') checkStatuses(false);
+    }, 15000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkStatuses(false);
+    });
+}
 
 const pushSettings = document.getElementById('pushSettings');
 
@@ -70,8 +170,6 @@ if (pushSettings) {
     const publicKey = document.querySelector('meta[name="webpush-public-key"]')?.content;
     const storeUrl = document.querySelector('meta[name="webpush-store-url"]')?.content;
     const testUrl = document.querySelector('meta[name="webpush-test-url"]')?.content;
-    const serviceWorkerUrl = document.querySelector('meta[name="webpush-service-worker"]')?.content || '/workspace-sw.js';
-    const serviceWorkerScope = document.querySelector('meta[name="webpush-scope"]')?.content || '/workspace/';
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     const toggleButton = document.getElementById('pushToggleButton');
     const testButton = document.getElementById('pushTestButton');
@@ -112,7 +210,8 @@ if (pushSettings) {
             return;
         }
 
-        registration = await navigator.serviceWorker.register(serviceWorkerUrl, { scope: serviceWorkerScope });
+        registration = await registerServiceWorker();
+        if (!registration) throw new Error('Service worker unavailable');
         await navigator.serviceWorker.ready;
         subscription = await registration.pushManager.getSubscription();
         if (Notification.permission === 'denied') {

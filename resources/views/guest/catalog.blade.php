@@ -1,5 +1,7 @@
 @extends('layouts.guest')
 @section('title', __('guest.services'))
+@section('body-class', 'guest-catalog-page')
+@section('main-class', 'guest-catalog-main')
 @section('content')
 @php
     $money = app(\App\Support\Money::class);
@@ -37,11 +39,11 @@
     </div>
     @if($menuPages->count() > 1)
         <div class="guest-menu-pagination">
-            <button type="button" data-menu-prev aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
+            <button type="button" data-menu-prev aria-label="Previous"><i class="bi bi-chevron-up"></i></button>
             <div class="guest-menu-dots">
                 @foreach($menuPages as $page)<button class="{{ $loop->first ? 'active' : '' }}" type="button" data-menu-dot="{{ $loop->index }}" aria-label="{{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif></button>@endforeach
             </div>
-            <button type="button" data-menu-next aria-label="Next"><i class="bi bi-chevron-right"></i></button>
+            <button type="button" data-menu-next aria-label="Next"><i class="bi bi-chevron-down"></i></button>
         </div>
     @endif
 </div></section>

@@ -10,14 +10,14 @@
     <meta name="apple-mobile-web-app-title" content="{{ $company->name }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php($hasStay = app()->bound('guestStay'))
-    @if($hasStay)<meta name="guest-session-status-url" content="{{ route('guest.session.status', $company) }}"><meta name="guest-access-url" content="{{ route('guest.access', $company) }}"><meta name="webpush-public-key" content="{{ config('webpush.vapid.public_key') }}"><meta name="webpush-store-url" content="{{ route('guest.push-subscriptions.store', $company) }}"><meta name="webpush-service-worker" content="/guest-sw.js"><meta name="webpush-scope" content="/guest/">@endif
+    @if($hasStay)<meta name="guest-session-status-url" content="{{ route('guest.session.status', $company) }}"><meta name="guest-access-url" content="{{ route('guest.access', $company) }}"><meta name="webpush-public-key" content="{{ config('webpush.vapid.public_key') }}"><meta name="webpush-store-url" content="{{ route('guest.push-subscriptions.store', $company) }}"><meta name="webpush-service-worker" content="/guest-sw.js?v={{ filemtime(public_path('guest-sw.js')) }}"><meta name="webpush-scope" content="/guest/"><meta name="guest-orders-status-url" content="{{ route('guest.orders.statuses', $company) }}">@endif
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('app-icons/luma-180.png') }}">
     <link rel="manifest" href="{{ route('guest.manifest', $company) }}">
     <title>@yield('title', __('guest.services')) · {{ $company->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="guest-body guest-kiosk {{ in_array(app()->getLocale(), ['ar','he'], true) ? 'guest-rtl' : '' }}">
+<body class="guest-body guest-kiosk @yield('body-class') {{ in_array(app()->getLocale(), ['ar','he'], true) ? 'guest-rtl' : '' }}">
 <div class="guest-app">
     <header class="guest-header">
         <a class="guest-hotel" href="{{ $hasStay ? route('guest.catalog', $company) : route('guest.access', $company) }}">

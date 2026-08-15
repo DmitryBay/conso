@@ -12,6 +12,7 @@ use App\Models\ServiceNode;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,24 @@ class OrderController extends Controller
         $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)->with('items.service')->latest()->get();
 
         return view('guest.orders.index', compact('company', 'orders'));
+    }
+
+    public function statuses(Company $company): JsonResponse
+    {
+        /** @var GuestSession $stay */
+        $stay = app('guestStay');
+        $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)
+            ->latest()
+            ->get(['public_id', 'status', 'payment_status', 'updated_at']);
+
+        return response()->json([
+            'orders' => $orders->map(fn (ServiceRequest $order) => [
+                'id' => $order->public_id,
+                'status' => $order->status->value,
+                'payment_status' => $order->payment_status,
+                'updated_at' => $order->updated_at?->toISOString(),
+            ])->values(),
+        ])->header('Cache-Control', 'no-store, private');
     }
 
     public function show(Company $company, ServiceRequest $serviceRequest): View
@@ -128,10 +147,11 @@ class OrderController extends Controller
         $orders = ServiceRequest::where('guest_stay_id', $stay->guest_stay_id)
             ->where('payment_method', 'room_charge')
             ->where('payment_status', 'invoiced')
+            ->where('status', '!=', RequestStatus::Cancelled)
             ->with('items.service')
             ->oldest()
             ->get();
-        $total = (int) $orders->reject(fn (ServiceRequest $order) => $order->status === RequestStatus::Cancelled)->sum('price_minor');
+        $total = (int) $orders->sum('price_minor');
 
         return view('guest.bill', compact('company', 'stay', 'orders', 'total'));
     }

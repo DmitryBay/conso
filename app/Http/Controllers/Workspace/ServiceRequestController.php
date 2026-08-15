@@ -154,17 +154,22 @@ class ServiceRequestController extends Controller
                 throw ValidationException::withMessages(['status' => __('workspace.guest_confirmation_required')]);
             }
 
+            $isRoomCharge = $lockedRequest->guest_stay_id
+                && $lockedRequest->payment_method === 'room_charge'
+                && $lockedRequest->price_minor > 0;
+            $paymentStatus = match (true) {
+                $isRoomCharge && $to === RequestStatus::Cancelled => 'cancelled',
+                $isRoomCharge && $to === RequestStatus::Completed => 'invoiced',
+                $isRoomCharge && $from === RequestStatus::Cancelled && $lockedRequest->payment_status === 'cancelled' => 'pending',
+                default => $lockedRequest->payment_status,
+            };
+
             $lockedRequest->update([
                 'status' => $to,
                 'assigned_to' => $assignee?->id,
                 'accepted_at' => $to !== RequestStatus::New ? ($lockedRequest->accepted_at ?? now()) : $lockedRequest->accepted_at,
                 'completed_at' => $to === RequestStatus::Completed ? ($lockedRequest->completed_at ?? now()) : null,
-                'payment_status' => $lockedRequest->guest_stay_id
-                    && $to === RequestStatus::Completed
-                    && $lockedRequest->payment_method === 'room_charge'
-                    && $lockedRequest->price_minor > 0
-                        ? 'invoiced'
-                        : $lockedRequest->payment_status,
+                'payment_status' => $paymentStatus,
             ]);
             $lockedRequest->history()->create([
                 'user_id' => $request->user()->id,

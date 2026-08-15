@@ -54,6 +54,7 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
         Route::get('services/{serviceNode}/order', [GuestOrderController::class, 'create'])->name('orders.create');
         Route::post('services/{serviceNode}/order', [GuestOrderController::class, 'store'])->name('orders.store');
         Route::get('orders', [GuestOrderController::class, 'index'])->name('orders.index');
+        Route::get('orders-statuses', [GuestOrderController::class, 'statuses'])->name('orders.statuses');
         Route::get('orders/{serviceRequest}', [GuestOrderController::class, 'show'])->name('orders.show');
         Route::post('orders/{serviceRequest}/confirm', [GuestOrderController::class, 'confirm'])->name('orders.confirm');
         Route::get('bill', [GuestOrderController::class, 'bill'])->name('bill');
