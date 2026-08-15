@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RequestPriority;
 use App\Enums\RequestStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,14 @@ class ServiceRequest extends Model
             'refunded_at' => 'datetime',
             'price_minor' => 'integer',
         ];
+    }
+
+    public function scopeForCurrentStays(Builder $query): Builder
+    {
+        return $query->where(function (Builder $current): void {
+            $current->whereNull('guest_stay_id')
+                ->orWhereHas('guestStay', fn (Builder $stay) => $stay->where('status', 'checked_in'));
+        });
     }
 
     public function company(): BelongsTo

@@ -48,9 +48,7 @@ class ServiceRequestController extends Controller
             ->when($request->boolean('cancelled'), fn ($query) => $query->where('status', RequestStatus::Cancelled))
             ->when(! $request->boolean('cancelled'), fn ($query) => $query->where('status', '!=', RequestStatus::Cancelled))
             ->when($request->boolean('archive'), fn ($query) => $query->whereNotNull('archived_at'))
-            ->when(! $request->boolean('all_stays') && ! $request->boolean('archive'), fn ($query) => $query->where(function ($active) {
-                $active->whereNull('guest_stay_id')->orWhereHas('guestStay', fn ($stay) => $stay->where('status', 'checked_in'));
-            }))
+            ->when(! $request->boolean('all_stays') && ! $request->boolean('archive'), fn ($query) => $query->forCurrentStays())
             ->latest();
 
         $requests = $query->get()->groupBy(fn (ServiceRequest $item) => $item->status === RequestStatus::Completed

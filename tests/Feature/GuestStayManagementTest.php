@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\CloseExpiredStays;
 use App\Enums\CompanyStatus;
 use App\Enums\GuestStayStatus;
+use App\Enums\RequestStatus;
 use App\Enums\UserRole;
 use App\Mail\FinalBillMail;
 use App\Models\Company;
@@ -168,6 +169,37 @@ class GuestStayManagementTest extends TestCase
 
         $this->assertTrue($colors->every(fn (int $color) => $color >= 0 && $color < GuestColor::PALETTE_SIZE));
         $this->assertLessThanOrEqual(GuestColor::PALETTE_SIZE, $colors->unique()->count());
+    }
+
+    public function test_sidebar_new_request_count_matches_default_current_stay_board(): void
+    {
+        [$company, $room, $manager] = $this->hotel();
+        $pastStay = GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Past guest', 'check_in_at' => now()->subDays(3), 'check_out_at' => now()->subDay(),
+            'nights' => 2, 'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::CheckedOut,
+        ]);
+        ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'guest_stay_id' => $pastStay->id,
+            'room_number' => $room->number, 'title' => 'Past request', 'status' => RequestStatus::New,
+            'priority' => 'normal',
+        ]);
+        ServiceRequest::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id,
+            'room_number' => $room->number, 'title' => 'Current request', 'status' => RequestStatus::New,
+            'priority' => 'normal',
+        ]);
+
+        $this->actingAs($manager)->get(route('workspace.requests.index'))
+            ->assertOk()
+            ->assertSee('<span class="sidebar-badge">1</span>', false)
+            ->assertSee('Current request')
+            ->assertDontSee('Past request')
+            ->assertViewHas('requests', fn ($requests) => $requests->get(RequestStatus::New->value)?->count() === 1);
+
+        $this->actingAs($manager)->get(route('workspace.dashboard'))
+            ->assertOk()
+            ->assertViewHas('stats', fn (array $stats) => $stats['new'] === 1);
     }
 
     public function test_availability_search_returns_only_rooms_without_overlapping_active_stays(): void
