@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\FinalBillMail;
 use App\Models\GuestStay;
 use App\Models\Room;
+use App\Support\GuestColor;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -153,6 +154,7 @@ class GuestStayController extends Controller
                     'occupied' => (bool) $stay,
                     'stay_id' => $stay?->id,
                     'guest' => $stay?->guest_name,
+                    'guest_color' => $stay ? GuestColor::index($stay->guest_name) : null,
                     'label' => $stay
                         ? ($stay->guest_name.' · '.$stay->check_in_at->copy()->setTimezone($timezone)->format('d.m').'–'.$stay->check_out_at->copy()->setTimezone($timezone)->format('d.m'))
                         : null,

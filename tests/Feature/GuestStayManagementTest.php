@@ -13,6 +13,7 @@ use App\Models\GuestStay;
 use App\Models\Room;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Support\GuestColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -148,8 +149,19 @@ class GuestStayManagementTest extends TestCase
                 'room_id' => $room->id,
             ]))->assertOk()
                 ->assertSee(__('workspace.occupancy_calendar'))
-                ->assertSee('Calendar guest');
+                ->assertSee('Calendar guest')
+                ->assertSee('guest-color-'.GuestColor::index('Calendar guest'), false);
         }
+    }
+
+    public function test_guest_calendar_color_is_stable_and_limited_to_twenty_variants(): void
+    {
+        $this->assertSame(GuestColor::index('Anna Petrova'), GuestColor::index('  ANNA PETROVA '));
+
+        $colors = collect(range(1, 500))->map(fn (int $number) => GuestColor::index('Guest '.$number));
+
+        $this->assertTrue($colors->every(fn (int $color) => $color >= 0 && $color < GuestColor::PALETTE_SIZE));
+        $this->assertLessThanOrEqual(GuestColor::PALETTE_SIZE, $colors->unique()->count());
     }
 
     public function test_availability_search_returns_only_rooms_without_overlapping_active_stays(): void
