@@ -154,6 +154,7 @@ class GuestStayController extends Controller
                     'occupied' => (bool) $stay,
                     'stay_id' => $stay?->id,
                     'guest' => $stay?->guest_name,
+                    'guest_initials' => $stay ? GuestColor::initials($stay->guest_name) : null,
                     'guest_color' => $stay ? GuestColor::index($stay->guest_name) : null,
                     'label' => $stay
                         ? ($stay->guest_name.' · '.$stay->check_in_at->copy()->setTimezone($timezone)->format('d.m').'–'.$stay->check_out_at->copy()->setTimezone($timezone)->format('d.m'))

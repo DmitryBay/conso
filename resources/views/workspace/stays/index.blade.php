@@ -62,7 +62,7 @@
                     @foreach($row['cells'] as $index => $cell)
                         @php($day=$calendar['days'][$index])
                         <{{ $cell['occupied'] ? 'a' : 'div' }} class="occupancy-cell {{ $cell['occupied'] ? 'is-occupied' : 'is-free' }} {{ $day['date']->isWeekend() ? 'is-weekend' : '' }} {{ $day['date']->isToday() ? 'is-today' : '' }}" @if($cell['occupied']) href="{{ route('workspace.stays.show',$cell['stay_id']) }}" @endif title="{{ $cell['label'] ?: __('workspace.free_on_date',['date'=>$day['date']->format('d.m.Y')]) }}">
-                            @if($cell['occupied'])<span class="guest-color-{{ $cell['guest_color'] }}">{{ mb_strtoupper(mb_substr($cell['guest'] ?: '•',0,1)) }}</span>@endif
+                            @if($cell['occupied'])<span class="guest-color-{{ $cell['guest_color'] }}">{{ $cell['guest_initials'] }}</span>@endif
                         </{{ $cell['occupied'] ? 'a' : 'div' }}>
                     @endforeach
                 </div>

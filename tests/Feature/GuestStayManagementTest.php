@@ -150,6 +150,7 @@ class GuestStayManagementTest extends TestCase
             ]))->assertOk()
                 ->assertSee(__('workspace.occupancy_calendar'))
                 ->assertSee('Calendar guest')
+                ->assertSee('>CG</span>', false)
                 ->assertSee('guest-color-'.GuestColor::index('Calendar guest'), false);
         }
     }
@@ -157,6 +158,10 @@ class GuestStayManagementTest extends TestCase
     public function test_guest_calendar_color_is_stable_and_limited_to_twenty_variants(): void
     {
         $this->assertSame(GuestColor::index('Anna Petrova'), GuestColor::index('  ANNA PETROVA '));
+        $this->assertSame('AP', GuestColor::initials('Anna Petrova'));
+        $this->assertSame('АС', GuestColor::initials('Анна Мария Смирнова'));
+        $this->assertSame('LI', GuestColor::initials('Liam'));
+        $this->assertSame('•', GuestColor::initials(''));
 
         $colors = collect(range(1, 500))->map(fn (int $number) => GuestColor::index('Guest '.$number));
 
