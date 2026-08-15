@@ -814,6 +814,59 @@ a { text-decoration: none; }
 .room-active-toggle span { font-size:11px; font-weight:750; }
 .room-active-toggle small { color:#7a8783; font-size:9px; grid-column:2; }
 
+/* Occupancy calendar */
+.occupancy-card { overflow:hidden; }
+.occupancy-toolbar { align-items:end; display:flex; gap:24px; justify-content:space-between; padding:22px 24px 16px; }
+.occupancy-toolbar p,.availability-card p { color:#73827d; font-size:11px; margin:6px 0 0; }
+.occupancy-room-filter { min-width:240px; }
+.occupancy-nav { align-items:center; border-top:1px solid var(--hc-border); display:flex; gap:10px; padding:10px 14px; }
+.occupancy-nav > strong { font-family:Georgia,serif; font-size:14px; font-weight:400; text-transform:capitalize; }
+.occupancy-scroll-actions { display:flex; gap:6px; }
+.occupancy-scroll { overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-color:#b8c8c2 #edf2f0; scrollbar-width:thin; }
+.occupancy-grid { --day-width:38px; min-width:calc(180px + (var(--calendar-days) * var(--day-width))); width:max-content; }
+.occupancy-month-row,.occupancy-day-row,.occupancy-room-row { display:grid; grid-template-columns:180px repeat(var(--calendar-days),var(--day-width)); }
+.occupancy-month-row { border-bottom:1px solid var(--hc-border); }
+.occupancy-corner,.occupancy-row-label { background:#fff; border-right:1px solid var(--hc-border); left:0; position:sticky; z-index:3; }
+.occupancy-corner { color:#73827d; font-size:9px; font-weight:750; letter-spacing:.08em; padding:10px 14px; text-transform:uppercase; }
+.occupancy-month { background:#f5f8f7; border-right:1px solid var(--hc-border); color:#29463f; font-size:10px; font-weight:750; letter-spacing:.04em; padding:10px 12px; text-align:center; text-transform:capitalize; }
+.occupancy-day-row { border-bottom:1px solid var(--hc-border); }
+.occupancy-day-head { align-items:center; background:#fff; border-right:1px solid #edf1ef; display:flex; flex-direction:column; gap:2px; justify-content:center; min-height:58px; position:relative; }
+.occupancy-day-head.is-weekend,.occupancy-cell.is-weekend { background-color:#f8faf9; }
+.occupancy-day-head small { color:#899792; font-size:8px; font-weight:700; text-transform:uppercase; }
+.occupancy-day-head strong { color:#38534c; font-size:11px; }
+.occupancy-day-head.is-today:after,.occupancy-cell.is-today:after { background:#d3914b; content:""; height:100%; left:0; opacity:.7; position:absolute; top:0; width:2px; }
+.load-dot { border-radius:10px; display:block; height:5px; width:20px; }
+.load-level-0 { background:#dfe8e4; }
+.load-level-1 { background:#c8dfd1; }
+.load-level-2 { background:#92c1a6; }
+.load-level-3 { background:#e5bf75; }
+.load-level-4 { background:#dd8b62; }
+.load-level-5 { background:#b84e4e; }
+.occupancy-room-row { border-bottom:1px solid #edf1ef; min-height:42px; }
+.occupancy-row-label { align-items:center; display:flex; flex-direction:column; justify-content:center; padding:7px 14px; }
+.occupancy-row-label strong,.occupancy-row-label span { align-self:stretch; color:#29463f; font-size:10px; font-weight:750; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.occupancy-row-label small { align-self:stretch; color:#899792; font-size:8px; margin-top:1px; }
+.occupancy-cell { align-items:center; border-right:1px solid #edf1ef; display:flex; justify-content:center; position:relative; }
+.occupancy-cell.is-occupied { background:#d8e9e1; }
+.occupancy-cell.is-occupied span { align-items:center; background:#397764; border-radius:50%; color:#fff; display:flex; font-size:7px; font-weight:800; height:18px; justify-content:center; width:18px; }
+.occupancy-cell.is-free:hover { background:#eef7f3; }
+.occupancy-empty { color:#73827d; font-size:11px; padding:28px; }
+.occupancy-legend { align-items:center; display:flex; flex-wrap:wrap; gap:14px; padding:12px 24px 16px; }
+.occupancy-legend span { align-items:center; color:#536860; display:flex; font-size:9px; gap:5px; }
+.occupancy-legend i { border-radius:4px; display:inline-block; height:9px; width:20px; }
+.occupancy-legend small { color:#899792; font-size:9px; margin-left:auto; }
+.legend-free i { background:#fff; border:1px solid #dfe8e4; }
+.availability-card { padding:20px 24px; }
+.availability-card > form { align-items:end; display:grid; gap:16px; grid-template-columns:minmax(260px,1fr) minmax(150px,.45fr) minmax(150px,.45fr) auto; }
+.availability-results { align-items:center; background:#f2f7f5; border:1px solid #dce9e4; border-radius:12px; display:flex; gap:20px; justify-content:space-between; margin-top:18px; padding:14px 16px; }
+.availability-results > div:first-child { display:flex; flex-direction:column; min-width:180px; }
+.availability-results strong { color:#245e4e; font-size:12px; }
+.availability-results small { color:#73827d; font-size:9px; margin-top:2px; }
+.available-villa-list { display:flex; flex-wrap:wrap; gap:7px; justify-content:flex-end; }
+.available-villa-list span { background:#fff; border:1px solid #cfe1da; border-radius:18px; color:#2f705e; font-size:9px; font-weight:700; padding:6px 10px; }
+.available-villa-list i { margin-right:5px; }
+.available-villa-list em { color:#a04c4c; font-size:10px; font-style:normal; }
+
 @media (max-width:1199.98px) {
     .room-inventory-row { grid-template-columns:auto repeat(3,minmax(0,1fr)); }
     .room-inventory-row .room-active-toggle { grid-column:2 / 4; }
@@ -849,4 +902,13 @@ a { text-decoration: none; }
     .guest-menu-tile > i { bottom:10px; right:10px; }
     .guest-rtl .guest-menu-tile > i { left:10px; }
     .guest-guide-menu-grid { grid-template-columns:1fr; }
+    .occupancy-toolbar { align-items:stretch; flex-direction:column; }
+    .occupancy-room-filter { min-width:0; width:100%; }
+    .occupancy-nav > strong { font-size:11px; }
+    .occupancy-scroll-actions { display:none; }
+    .occupancy-grid { --day-width:34px; min-width:calc(140px + (var(--calendar-days) * var(--day-width))); }
+    .occupancy-month-row,.occupancy-day-row,.occupancy-room-row { grid-template-columns:140px repeat(var(--calendar-days),var(--day-width)); }
+    .availability-card > form { grid-template-columns:1fr; }
+    .availability-results { align-items:flex-start; flex-direction:column; }
+    .available-villa-list { justify-content:flex-start; }
 }

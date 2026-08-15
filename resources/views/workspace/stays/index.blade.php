@@ -11,6 +11,91 @@
 
 @if(session('stay_pin'))<div class="stay-pin-card mb-4"><span><i class="bi bi-key"></i></span><div><small>{{ __('workspace.guest_access_pin') }}</small><strong>{{ session('stay_pin') }}</strong><p>{{ __('workspace.pin_for_room',['room'=>session('stay_room')]) }}</p></div><div class="ms-auto text-end"><small>{{ __('workspace.show_once') }}</small></div></div>@endif
 
+<section class="surface-card occupancy-card mb-4" id="occupancyCalendar">
+    <div class="occupancy-toolbar">
+        <div>
+            <div class="eyebrow">{{ __('workspace.occupancy_planning') }}</div>
+            <h2 class="section-title mt-1">{{ __('workspace.occupancy_calendar') }}</h2>
+            <p>{{ __('workspace.occupancy_calendar_intro') }}</p>
+        </div>
+        <form class="occupancy-room-filter" method="GET" action="{{ route('workspace.stays.index') }}#occupancyCalendar">
+            <input type="hidden" name="calendar_month" value="{{ $calendarStart->format('Y-m') }}">
+            @if(request('available_from'))<input type="hidden" name="available_from" value="{{ request('available_from') }}">@endif
+            @if(request('available_to'))<input type="hidden" name="available_to" value="{{ request('available_to') }}">@endif
+            <label class="form-label" for="calendarRoom">{{ __('workspace.filter_by_room') }}</label>
+            <select class="form-select form-select-sm" id="calendarRoom" name="room_id" onchange="this.form.submit()">
+                <option value="">{{ __('workspace.all_villas') }}</option>
+                @foreach($rooms as $room)<option value="{{ $room->id }}" @selected($selectedRoomId === $room->id)>{{ $room->displayLabel() }}</option>@endforeach
+            </select>
+        </form>
+    </div>
+
+    <div class="occupancy-nav">
+        <a class="btn btn-light btn-sm" href="{{ request()->fullUrlWithQuery(['calendar_month'=>$calendarStart->copy()->subMonthsNoOverflow(3)->format('Y-m')]) }}#occupancyCalendar" aria-label="{{ __('workspace.previous_three_months') }}"><i class="bi bi-chevron-left"></i></a>
+        <strong>{{ $calendarStart->locale(app()->getLocale())->isoFormat('MMMM YYYY') }} — {{ $calendarStart->copy()->addMonthsNoOverflow(2)->locale(app()->getLocale())->isoFormat('MMMM YYYY') }}</strong>
+        <a class="btn btn-light btn-sm" href="{{ request()->fullUrlWithQuery(['calendar_month'=>$calendarStart->copy()->addMonthsNoOverflow(3)->format('Y-m')]) }}#occupancyCalendar" aria-label="{{ __('workspace.next_three_months') }}"><i class="bi bi-chevron-right"></i></a>
+        <div class="occupancy-scroll-actions ms-auto">
+            <button class="btn btn-light btn-sm" type="button" data-calendar-scroll="-1" aria-label="{{ __('workspace.scroll_left') }}"><i class="bi bi-arrow-left"></i></button>
+            <button class="btn btn-light btn-sm" type="button" data-calendar-scroll="1" aria-label="{{ __('workspace.scroll_right') }}"><i class="bi bi-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div class="occupancy-scroll" data-occupancy-scroll>
+        <div class="occupancy-grid" style="--calendar-days:{{ $calendar['days']->count() }}">
+            <div class="occupancy-month-row">
+                <div class="occupancy-corner">{{ __('workspace.villa') }}</div>
+                @foreach($calendar['months'] as $month)<div class="occupancy-month" style="grid-column:span {{ $month['days'] }}">{{ $month['date']->locale(app()->getLocale())->isoFormat('MMMM YYYY') }}</div>@endforeach
+            </div>
+            <div class="occupancy-day-row">
+                <div class="occupancy-row-label"><span>{{ __('workspace.daily_load') }}</span><small>{{ __('workspace.occupied_count') }}</small></div>
+                @foreach($calendar['days'] as $day)
+                    <div class="occupancy-day-head {{ $day['date']->isWeekend() ? 'is-weekend' : '' }} {{ $day['date']->isToday() ? 'is-today' : '' }}" title="{{ $day['date']->format('d.m.Y') }} · {{ $day['percent'] }}%">
+                        <small>{{ mb_substr($day['date']->locale(app()->getLocale())->isoFormat('dd'),0,2) }}</small><strong>{{ $day['date']->format('d') }}</strong>
+                        <span class="load-dot load-level-{{ $day['level'] }}"></span>
+                    </div>
+                @endforeach
+            </div>
+            @forelse($calendar['rooms'] as $row)
+                @if(!$selectedRoomId || $selectedRoomId === $row['room']->id)
+                <div class="occupancy-room-row">
+                    <div class="occupancy-row-label"><strong>{{ $row['room']->displayName() }}</strong><small>{{ $row['room']->number }}</small></div>
+                    @foreach($row['cells'] as $index => $cell)
+                        @php($day=$calendar['days'][$index])
+                        <div class="occupancy-cell {{ $cell['occupied'] ? 'is-occupied' : 'is-free' }} {{ $day['date']->isWeekend() ? 'is-weekend' : '' }} {{ $day['date']->isToday() ? 'is-today' : '' }}" title="{{ $cell['label'] ?: __('workspace.free_on_date',['date'=>$day['date']->format('d.m.Y')]) }}">
+                            @if($cell['occupied'])<span>{{ mb_strtoupper(mb_substr($cell['guest'] ?: '•',0,1)) }}</span>@endif
+                        </div>
+                    @endforeach
+                </div>
+                @endif
+            @empty
+                <div class="occupancy-empty">{{ __('workspace.no_rooms_hint') }}</div>
+            @endforelse
+        </div>
+    </div>
+    <div class="occupancy-legend">
+        <span class="legend-free"><i></i>{{ __('workspace.available') }}</span>
+        @foreach([20,40,60,80,100] as $index => $percent)<span><i class="load-level-{{ $index+1 }}"></i>{{ $percent }}%</span>@endforeach
+        <small>{{ __('workspace.load_legend_hint') }}</small>
+    </div>
+</section>
+
+<section class="surface-card availability-card mb-4">
+    <form method="GET" action="{{ route('workspace.stays.index') }}#availabilityResults">
+        <input type="hidden" name="calendar_month" value="{{ $calendarStart->format('Y-m') }}">
+        @if($selectedRoomId)<input type="hidden" name="room_id" value="{{ $selectedRoomId }}">@endif
+        <div><div class="eyebrow">{{ __('workspace.availability') }}</div><h2 class="section-title mt-1">{{ __('workspace.find_free_villas') }}</h2><p>{{ __('workspace.find_free_villas_intro') }}</p></div>
+        <div><label class="form-label" for="availableFrom">{{ __('workspace.arrival_date') }}</label><input class="form-control" id="availableFrom" type="date" name="available_from" value="{{ request('available_from',now($currentCompany->timezone)->format('Y-m-d')) }}" required></div>
+        <div><label class="form-label" for="availableTo">{{ __('workspace.departure_date') }}</label><input class="form-control" id="availableTo" type="date" name="available_to" value="{{ request('available_to',now($currentCompany->timezone)->addDay()->format('Y-m-d')) }}" required></div>
+        <button class="btn btn-primary"><i class="bi bi-search me-2"></i>{{ __('workspace.show_free_villas') }}</button>
+    </form>
+    @if($availabilityRequested)
+        <div class="availability-results" id="availabilityResults">
+            <div><strong>{{ trans_choice('workspace.available_villas_count',$availableRooms->count(),['count'=>$availableRooms->count()]) }}</strong><small>{{ \Illuminate\Support\Carbon::parse(request('available_from'))->format('d.m.Y') }} — {{ \Illuminate\Support\Carbon::parse(request('available_to'))->format('d.m.Y') }}</small></div>
+            <div class="available-villa-list">@forelse($availableRooms as $room)<span><i class="bi bi-house-check"></i>{{ $room->displayLabel() }}</span>@empty<em>{{ __('workspace.no_available_villas') }}</em>@endforelse</div>
+        </div>
+    @endif
+</section>
+
 <div class="row g-3 mb-4">
     <div class="col-4"><div class="surface-card metric-card"><span class="metric-icon metric-green"><i class="bi bi-door-open"></i></span><div class="metric-value">{{ $active->count() }}</div><div class="metric-label">{{ __('workspace.stay_checked_in_plural') }}</div></div></div>
     <div class="col-4"><div class="surface-card metric-card"><span class="metric-icon metric-blue"><i class="bi bi-calendar2-check"></i></span><div class="metric-value">{{ $upcoming->count() }}</div><div class="metric-label">{{ __('workspace.stay_upcoming_plural') }}</div></div></div>
@@ -47,5 +132,12 @@
 </div></div><div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">{{ __('workspace.cancel') }}</button><button class="btn btn-primary">{{ __('workspace.create_stay') }}</button></div></form></div></div>
 @endpush
 @push('scripts')
-<script>document.addEventListener('click',async event=>{const button=event.target.closest('.copy-stay-pin');if(!button)return;await navigator.clipboard.writeText(button.dataset.pin);const icon=button.querySelector('i');icon.className='bi bi-check-lg';setTimeout(()=>icon.className='bi bi-copy',1400);});</script>
+<script>
+document.addEventListener('click',async event=>{
+    const copyButton=event.target.closest('.copy-stay-pin');
+    if(copyButton){await navigator.clipboard.writeText(copyButton.dataset.pin);const icon=copyButton.querySelector('i');icon.className='bi bi-check-lg';setTimeout(()=>icon.className='bi bi-copy',1400);return;}
+    const scrollButton=event.target.closest('[data-calendar-scroll]');
+    if(scrollButton){document.querySelector('[data-occupancy-scroll]')?.scrollBy({left:Number(scrollButton.dataset.calendarScroll)*420,behavior:'smooth'});}
+});
+</script>
 @endpush

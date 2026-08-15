@@ -127,6 +127,57 @@ class GuestStayManagementTest extends TestCase
         ])->assertRedirect(route('guest.catalog', $company));
     }
 
+    public function test_owner_and_manager_can_view_the_three_month_occupancy_calendar(): void
+    {
+        [$company, $room, $manager] = $this->hotel();
+        $owner = User::factory()->create([
+            'company_id' => $company->id, 'role' => UserRole::CompanyOwner, 'is_active' => true,
+        ]);
+        GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Calendar guest', 'check_in_at' => now()->addDay(), 'check_out_at' => now()->addDays(3),
+            'nights' => 2, 'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::Upcoming,
+        ]);
+
+        foreach ([$owner, $manager] as $user) {
+            $this->actingAs($user)->get(route('workspace.stays.index', [
+                'calendar_month' => now($company->timezone)->format('Y-m'),
+                'room_id' => $room->id,
+            ]))->assertOk()
+                ->assertSee(__('workspace.occupancy_calendar'))
+                ->assertSee('Calendar guest');
+        }
+    }
+
+    public function test_availability_search_returns_only_rooms_without_overlapping_active_stays(): void
+    {
+        [$company, $room, $manager] = $this->hotel();
+        Room::create([
+            'company_id' => $company->id, 'number' => '306', 'name' => 'Garden Villa',
+            'pin_hash' => Hash::make('legacy'), 'is_active' => true,
+        ]);
+        $from = now($company->timezone)->addDay()->startOfDay();
+        GuestStay::create([
+            'public_id' => (string) Str::uuid(), 'company_id' => $company->id, 'room_id' => $room->id,
+            'guest_name' => 'Busy guest', 'check_in_at' => $from->copy()->utc(),
+            'check_out_at' => $from->copy()->addDays(2)->utc(), 'nights' => 2,
+            'access_pin_hash' => Hash::make('1234'), 'status' => GuestStayStatus::Upcoming,
+        ]);
+
+        $this->actingAs($manager)->get(route('workspace.stays.index', [
+            'available_from' => $from->format('Y-m-d'),
+            'available_to' => $from->copy()->addDays(2)->format('Y-m-d'),
+        ]))->assertOk()
+            ->assertSee('Garden Villa')
+            ->assertSee(trans_choice('workspace.available_villas_count', 1, ['count' => 1]));
+
+        $this->actingAs($manager)->get(route('workspace.stays.index', [
+            'available_from' => $from->copy()->addDays(2)->format('Y-m-d'),
+            'available_to' => $from->copy()->addDays(3)->format('Y-m-d'),
+        ]))->assertOk()
+            ->assertSee(trans_choice('workspace.available_villas_count', 2, ['count' => 2]));
+    }
+
     private function hotel(): array
     {
         $company = Company::create([

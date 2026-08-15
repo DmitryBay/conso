@@ -9,6 +9,7 @@ use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -18,12 +19,115 @@ class GuestStayController extends Controller
 {
     public function index(Request $request): View
     {
-        $companyId = $request->user()->company_id;
+        $company = $request->user()->company;
+        $companyId = $company->id;
         $rooms = Room::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->orderBy('number')->get();
         $stays = GuestStay::where('company_id', $companyId)->with(['room', 'requests'])
             ->latest('check_in_at')->get();
 
-        return view('workspace.stays.index', compact('rooms', 'stays'));
+        $filters = $request->validate([
+            'calendar_month' => ['nullable', 'date_format:Y-m'],
+            'room_id' => ['nullable', 'integer'],
+            'available_from' => ['nullable', 'date_format:Y-m-d', 'required_with:available_to'],
+            'available_to' => ['nullable', 'date_format:Y-m-d', 'required_with:available_from', 'after:available_from'],
+        ]);
+
+        $selectedRoomId = isset($filters['room_id']) && $rooms->contains('id', (int) $filters['room_id'])
+            ? (int) $filters['room_id']
+            : null;
+        $calendarStart = isset($filters['calendar_month'])
+            ? Carbon::createFromFormat('Y-m-d', $filters['calendar_month'].'-01', $company->timezone)->startOfDay()
+            : now($company->timezone)->startOfMonth();
+        $calendarEnd = $calendarStart->copy()->addMonthsNoOverflow(3)->startOfMonth();
+
+        $calendarStays = GuestStay::where('company_id', $companyId)
+            ->where('check_in_at', '<', $calendarEnd->copy()->utc())
+            ->where('check_out_at', '>', $calendarStart->copy()->utc())
+            ->where('status', '!=', GuestStayStatus::Cancelled)
+            ->get();
+        $calendar = $this->buildCalendar($rooms, $calendarStays, $calendarStart, $calendarEnd, $company->timezone);
+
+        $availabilityRequested = isset($filters['available_from'], $filters['available_to']);
+        $availableRooms = collect();
+        if ($availabilityRequested) {
+            $availableFrom = Carbon::createFromFormat('Y-m-d', $filters['available_from'], $company->timezone)->startOfDay()->utc();
+            $availableTo = Carbon::createFromFormat('Y-m-d', $filters['available_to'], $company->timezone)->startOfDay()->utc();
+            $busyRoomIds = GuestStay::where('company_id', $companyId)
+                ->whereIn('status', [GuestStayStatus::Upcoming, GuestStayStatus::CheckedIn])
+                ->where('check_in_at', '<', $availableTo->copy()->addDay())
+                ->where('check_out_at', '>', $availableFrom->copy()->subDay())
+                ->get()
+                ->filter(function (GuestStay $stay) use ($availableFrom, $availableTo, $company): bool {
+                    $stayFrom = $stay->check_in_at->copy()->setTimezone($company->timezone)->startOfDay()->utc();
+                    $stayTo = $stay->check_out_at->copy()->setTimezone($company->timezone)->startOfDay()->utc();
+
+                    return $stayFrom->lt($availableTo) && $stayTo->gt($availableFrom);
+                })
+                ->pluck('room_id');
+            $availableRooms = $rooms->whereNotIn('id', $busyRoomIds)->values();
+        }
+
+        return view('workspace.stays.index', compact(
+            'rooms', 'stays', 'calendar', 'calendarStart', 'selectedRoomId',
+            'availabilityRequested', 'availableRooms',
+        ));
+    }
+
+    private function buildCalendar(Collection $rooms, Collection $stays, Carbon $start, Carbon $end, string $timezone): array
+    {
+        $days = collect();
+        for ($day = $start->copy(); $day->lt($end); $day->addDay()) {
+            $busyRoomIds = $stays->filter(function (GuestStay $stay) use ($day, $timezone): bool {
+                $effectiveEnd = $stay->checked_out_at && $stay->checked_out_at->lt($stay->check_out_at)
+                    ? $stay->checked_out_at
+                    : $stay->check_out_at;
+                $stayFrom = $stay->check_in_at->copy()->setTimezone($timezone)->startOfDay();
+                $stayTo = $effectiveEnd->copy()->setTimezone($timezone)->startOfDay();
+
+                return $stayFrom->lte($day) && $stayTo->gt($day);
+            })->pluck('room_id')->unique();
+            $percent = $rooms->isEmpty() ? 0 : (int) round(($busyRoomIds->count() / $rooms->count()) * 100);
+
+            $days->push([
+                'date' => $day->copy(),
+                'key' => $day->format('Y-m-d'),
+                'percent' => $percent,
+                'level' => $percent === 0 ? 0 : min(5, (int) ceil($percent / 20)),
+                'busy_count' => $busyRoomIds->count(),
+            ]);
+        }
+
+        $roomRows = $rooms->map(function (Room $room) use ($days, $stays, $timezone): array {
+            $roomStays = $stays->where('room_id', $room->id);
+            $cells = $days->map(function (array $day) use ($roomStays, $timezone): array {
+                $stay = $roomStays->first(function (GuestStay $stay) use ($day, $timezone): bool {
+                    $effectiveEnd = $stay->checked_out_at && $stay->checked_out_at->lt($stay->check_out_at)
+                        ? $stay->checked_out_at
+                        : $stay->check_out_at;
+                    $stayFrom = $stay->check_in_at->copy()->setTimezone($timezone)->startOfDay();
+                    $stayTo = $effectiveEnd->copy()->setTimezone($timezone)->startOfDay();
+
+                    return $stayFrom->lte($day['date']) && $stayTo->gt($day['date']);
+                });
+
+                return [
+                    'occupied' => (bool) $stay,
+                    'guest' => $stay?->guest_name,
+                    'label' => $stay
+                        ? ($stay->guest_name.' · '.$stay->check_in_at->copy()->setTimezone($timezone)->format('d.m').'–'.$stay->check_out_at->copy()->setTimezone($timezone)->format('d.m'))
+                        : null,
+                ];
+            });
+
+            return ['room' => $room, 'cells' => $cells];
+        });
+
+        $months = $days->groupBy(fn (array $day) => $day['date']->format('Y-m'))->map(fn (Collection $month) => [
+            'date' => $month->first()['date'],
+            'days' => $month->count(),
+        ])->values();
+
+        return ['days' => $days, 'months' => $months, 'rooms' => $roomRows];
     }
 
     public function store(Request $request): RedirectResponse
