@@ -6,14 +6,10 @@
     $backgroundImage = $serviceNode->resolvedBackground($company);
     $legacyBackground = asset('images/service-backgrounds/'.($serviceNode->background_key ?: 'wellness').'.jpg');
     $unitPrice = $serviceNode->price_minor ?? 0;
-    $orderTag = $serviceNode->smart_home_enabled ? 'div' : 'form';
 @endphp
 <div class="guest-page-heading"><a href="{{ route('guest.catalog', $company) }}"><i class="bi bi-arrow-left"></i></a><div><span class="eyebrow">{{ __('guest.order_step') }}</span><h1>{{ __('guest.order') }}</h1></div></div>
-<{{ $orderTag }} class="single-order-grid" @unless($serviceNode->smart_home_enabled) method="POST" action="{{ route('guest.orders.store', [$company, $serviceNode]) }}" @endunless>@unless($serviceNode->smart_home_enabled) @csrf @endunless
+<form class="single-order-grid" method="POST" action="{{ route('guest.orders.store', [$company, $serviceNode]) }}">@csrf
     <section class="single-service-hero" style="--service-bg:url('{{ $backgroundImage?->url() ?? $legacyBackground }}');--service-position:{{ $backgroundImage?->background_position ?? 'center' }};--service-size:{{ $backgroundImage?->background_size ?? 'cover' }}"><div><span class="service-card-icon"><i class="bi {{ $serviceNode->icon ?: 'bi-stars' }}"></i></span><h2>{{ $serviceNode->localizedName() }}</h2><p>{{ $serviceNode->localizedDescription() }}</p>@if($serviceNode->sla_minutes)<small><i class="bi bi-clock"></i> {{ __('guest.minutes', ['count'=>$serviceNode->sla_minutes]) }}</small>@endif</div></section>
-    @if($serviceNode->smart_home_enabled)
-        @include('guest.orders._smart-home')
-    @else
     <section class="guest-form-card single-order-form">
         <div class="order-price-block"><div><small>{{ __('guest.price_per_item') }}</small><strong>@if($unitPrice){{ $money->format($unitPrice, $company->currency) }}@else{{ __('guest.free') }}@endif</strong>@if($unitPrice && $money->approximateUsd($unitPrice, $company->currency))<span>{{ $money->approximateUsd($unitPrice, $company->currency) }}</span>@endif</div><small>{{ __('guest.base_currency', ['currency'=>$company->currency]) }}</small></div>
         <label class="guest-label" for="quantity">{{ __('guest.quantity') }}</label><select class="guest-select" id="quantity" name="quantity" data-unit-price="{{ $unitPrice }}">@foreach(range(1,10) as $quantity)<option value="{{ $quantity }}">{{ $quantity }}</option>@endforeach</select>
@@ -23,8 +19,7 @@
         <div class="single-order-total"><span>{{ __('guest.total') }}</span><strong id="orderTotal" data-template="{{ $company->currency === 'IDR' ? 'Rp %s' : $company->currency.' %s' }}">@if($unitPrice){{ $money->format($unitPrice, $company->currency) }}@else{{ __('guest.free') }}@endif</strong><small id="orderUsd">{{ $unitPrice ? $money->approximateUsd($unitPrice, $company->currency) : '' }}</small></div>
         <button class="guest-primary-button" type="submit">{{ __('guest.submit_order') }} <i class="bi bi-arrow-right"></i></button><p class="checkout-consent"><i class="bi bi-shield-check"></i> {{ __('guest.order_notice') }}</p>
     </section>
-    @endif
-</{{ $orderTag }}>
+</form>
 @endsection
 @push('scripts')
 <script>document.addEventListener('DOMContentLoaded',()=>{const q=document.getElementById('quantity'),total=document.getElementById('orderTotal'),usd=document.getElementById('orderUsd'),unit={{ $unitPrice }},rate={{ (float) config('concierge.usd_rates.'.$company->currency, 0) }},currency=@json($company->currency);if(!q||!unit)return;q.addEventListener('change',()=>{const value=unit*Number(q.value);total.textContent=currency==='IDR'?'Rp '+new Intl.NumberFormat('id-ID').format(value):currency+' '+new Intl.NumberFormat(undefined,{minimumFractionDigits:2}).format(value/100);if(usd&&currency!=='USD'&&rate)usd.textContent='≈ $'+new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format((currency==='IDR'?value:value/100)/rate);});});</script>

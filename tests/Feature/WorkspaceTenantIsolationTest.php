@@ -61,7 +61,7 @@ class WorkspaceTenantIsolationTest extends TestCase
         $this->assertDatabaseMissing('service_nodes', ['company_id' => $companyA->id, 'name' => 'Room service']);
     }
 
-    public function test_manager_can_configure_guest_options_and_smart_home_in_service_tree(): void
+    public function test_manager_can_configure_guest_options_in_service_tree(): void
     {
         [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
         $category = ServiceNode::create([
@@ -77,17 +77,15 @@ class WorkspaceTenantIsolationTest extends TestCase
             'parent_id' => $category->id,
             'is_active' => 1,
             'option_keys' => ['in_room_service', 'preferred_time'],
-            'smart_home_enabled' => 1,
         ])->assertRedirect();
 
         $service = ServiceNode::where('company_id', $company->id)->where('name', 'Room controls')->firstOrFail();
         $this->assertSame(['in_room_service', 'preferred_time'], $service->option_keys);
-        $this->assertTrue($service->smart_home_enabled);
 
         $this->get(route('workspace.services.index'))
             ->assertOk()
             ->assertSee('Обслуживание в номере')
-            ->assertSee('Умный дом — демо-панель');
+            ->assertDontSee('Умный дом — демо-панель');
 
         $this->post(route('workspace.services.store'), [
             'type' => ServiceNodeType::Service->value,

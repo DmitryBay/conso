@@ -15,7 +15,6 @@ use App\Models\User;
 use App\Notifications\WorkspaceNotification;
 use App\Support\ServiceOptionCatalog;
 use App\Support\ServiceTranslations;
-use App\Support\SmartHomeDemo;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -103,7 +102,6 @@ class DatabaseSeeder extends Seeder
         $transfer = $this->service($company, $transport, 'Трансфер в аэропорт', 'Частный автомобиль до аэропорта DPS', 350000, 60, 'bi-airplane', 10);
 
         $this->call(ServiceCatalogSeeder::class);
-        SmartHomeDemo::install($company);
         $this->call(BackgroundSetSeeder::class);
 
         $requestData = [

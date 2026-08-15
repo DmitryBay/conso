@@ -678,26 +678,23 @@ class GuestOrderingTest extends TestCase
         $this->assertDatabaseCount('service_requests', 1);
     }
 
-    public function test_smart_home_service_displays_demo_controls_and_cannot_create_an_order(): void
+    public function test_smart_home_is_a_standalone_guest_section(): void
     {
         [$company, $room] = $this->hotel('Alpha Hotel');
-        $service = $this->service($company, 'Room controls', 0);
-        $service->update(['smart_home_enabled' => true]);
         $stay = $this->stay($company, $room);
         $guestSession = ['guest_session.'.$company->id => $stay->public_id];
 
-        $this->withSession($guestSession)->get(route('guest.orders.create', [$company, $service]))
+        $this->withSession($guestSession)->get(route('guest.smart-home', $company))
             ->assertOk()
             ->assertSee('data-smart-home', false)
             ->assertSee('Основной свет')
             ->assertSee('Шторы')
             ->assertSee('Кондиционер')
             ->assertSee('Не беспокоить')
+            ->assertSee(route('guest.smart-home', $company))
             ->assertDontSee('name="quantity"', false);
 
-        $this->withSession($guestSession)->post(route('guest.orders.store', [$company, $service]), [
-            'quantity' => 1,
-        ])->assertUnprocessable();
+        $this->assertDatabaseMissing('service_nodes', ['company_id' => $company->id, 'name' => 'Умный дом']);
         $this->assertDatabaseCount('service_requests', 0);
     }
 

@@ -9,7 +9,6 @@ use App\Http\Requests\Admin\UpdateCompanyRequest;
 use App\Models\Company;
 use App\Models\PlatformSetting;
 use App\Models\User;
-use App\Support\SmartHomeDemo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,8 +65,6 @@ class CompanyController extends Controller
                 'password' => $request->owner_password,
                 'email_verified_at' => now(),
             ]);
-
-            SmartHomeDemo::install($company);
 
             return $company;
         });

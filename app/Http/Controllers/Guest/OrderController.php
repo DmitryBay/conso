@@ -35,7 +35,6 @@ class OrderController extends Controller
     public function store(Request $request, Company $company, ServiceNode $serviceNode, CreateGuestOrder $action): RedirectResponse
     {
         $this->ensureService($company, $serviceNode);
-        abort_if($serviceNode->smart_home_enabled, 422);
         $allowedOptions = ServiceOptionCatalog::normalize($serviceNode->option_keys ?? []);
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:10'],

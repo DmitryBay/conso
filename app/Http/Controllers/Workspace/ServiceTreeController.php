@@ -131,12 +131,10 @@ class ServiceTreeController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'option_keys' => ['nullable', 'array'],
             'option_keys.*' => ['string', 'distinct', Rule::in(ServiceOptionCatalog::keys())],
-            'smart_home_enabled' => ['nullable', 'boolean'],
         ]) + ['is_active' => $request->boolean('is_active')];
 
         $isService = ($data['type'] ?? null) === ServiceNodeType::Service->value;
         $data['option_keys'] = $isService ? ServiceOptionCatalog::normalize($data['option_keys'] ?? []) : null;
-        $data['smart_home_enabled'] = $isService && $request->boolean('smart_home_enabled');
 
         if ($request->has('translations')) {
             $data['translations'] = collect($data['translations'] ?? [])

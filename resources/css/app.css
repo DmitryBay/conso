@@ -150,15 +150,6 @@ a { text-decoration: none; }
 .service-option-grid label > span > i:last-child { color:#36725f; opacity:0; }
 .service-option-grid label:has(input:checked) > span { background:#edf5f1; border-color:#76a093; }
 .service-option-grid label:has(input:checked) > span > i:last-child { opacity:1; }
-.smart-home-admin-toggle { align-items:center; background:linear-gradient(135deg,#263f3a,#435954); border-radius:14px; color:#fff; cursor:pointer; display:grid; gap:12px; grid-template-columns:auto 1fr auto; padding:14px 16px; }
-.smart-home-admin-toggle > input { opacity:0; position:absolute; }
-.smart-home-admin-toggle > span:first-of-type { align-items:center; background:rgb(255 255 255 / 12%); border-radius:11px; display:flex; font-size:19px; height:42px; justify-content:center; width:42px; }
-.smart-home-admin-toggle > span:nth-of-type(2) { display:flex; flex-direction:column; }
-.smart-home-admin-toggle strong { font-size:11px; }
-.smart-home-admin-toggle small { color:rgb(255 255 255 / 64%); font-size:9px; margin-top:2px; }
-.smart-home-admin-toggle > i { color:#a8b5b1; font-size:24px; }
-.smart-home-admin-toggle:has(input:checked) { background:linear-gradient(135deg,#183c36,#35695c); }
-.smart-home-admin-toggle:has(input:checked) > i { color:#8ed5bd; }
 .node-type { color:#929c9e; font-size:9px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
 .node-meta { align-items: flex-end; color:#7b8789; flex-direction:column; font-size:10px; gap:3px; min-width:125px; }
 .node-meta strong { color:#2c383a; font-size:11px; }

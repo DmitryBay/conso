@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['company_id', 'parent_id', 'type', 'name', 'description', 'translations', 'external_links', 'option_keys', 'smart_home_enabled', 'icon', 'background_key', 'background_image_id', 'price_minor', 'sla_minutes', 'is_active', 'sort_order'])]
+#[Fillable(['company_id', 'parent_id', 'type', 'name', 'description', 'translations', 'external_links', 'option_keys', 'icon', 'background_key', 'background_image_id', 'price_minor', 'sla_minutes', 'is_active', 'sort_order'])]
 class ServiceNode extends Model
 {
     use HasFactory;
@@ -24,7 +24,6 @@ class ServiceNode extends Model
             'translations' => 'array',
             'external_links' => 'array',
             'option_keys' => 'array',
-            'smart_home_enabled' => 'boolean',
         ];
     }
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\Guest\AccessController as GuestAccessController;
 use App\Http\Controllers\Guest\CatalogController as GuestCatalogController;
 use App\Http\Controllers\Guest\NotificationPreferenceController as GuestNotificationPreferenceController;
 use App\Http\Controllers\Guest\OrderController as GuestOrderController;
+use App\Http\Controllers\Guest\SmartHomeController as GuestSmartHomeController;
 use App\Http\Controllers\Workspace\BackgroundLibraryController;
 use App\Http\Controllers\Workspace\DashboardController as WorkspaceDashboardController;
 use App\Http\Controllers\Workspace\GuestStayController;
@@ -52,6 +53,7 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
     Route::middleware('guest.hotel')->group(function () {
         Route::get('session/status', [GuestAccessController::class, 'status'])->name('session.status');
         Route::get('catalog', GuestCatalogController::class)->name('catalog');
+        Route::get('smart-home', GuestSmartHomeController::class)->name('smart-home');
         Route::post('logout', [GuestAccessController::class, 'destroy'])->name('logout');
         Route::get('services/{serviceNode}/order', [GuestOrderController::class, 'create'])->name('orders.create');
         Route::post('services/{serviceNode}/order', [GuestOrderController::class, 'store'])->name('orders.store');
