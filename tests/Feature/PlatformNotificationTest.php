@@ -29,6 +29,8 @@ class PlatformNotificationTest extends TestCase
             ->assertSee('Новая компания')
             ->assertSee('На платформе зарегистрирована новая компания.');
 
+        $this->assertFalse($admin->unreadNotifications()->exists());
+
         $this->actingAs($admin)->get(route('platform.notifications.read', $notification->id))
             ->assertRedirect(route('platform.dashboard'));
 

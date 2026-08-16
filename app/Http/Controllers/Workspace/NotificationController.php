@@ -11,6 +11,8 @@ class NotificationController extends Controller
 {
     public function index(Request $request): View
     {
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
         $notifications = $request->user()->notifications()->paginate(20);
 
         return view('workspace.notifications.index', compact('notifications'));
