@@ -24,7 +24,36 @@ if (document.body.classList.contains('guest-catalog-page')) {
 
 const serviceWorkerUrl = document.querySelector('meta[name="webpush-service-worker"]')?.content;
 const serviceWorkerScope = document.querySelector('meta[name="webpush-scope"]')?.content;
+const appUpdateNotice = document.querySelector('[data-app-update]');
+const appUpdateAction = document.querySelector('[data-app-update-action]');
 let serviceWorkerRegistration;
+let pendingServiceWorker;
+
+const showAppUpdate = worker => {
+    pendingServiceWorker = worker || pendingServiceWorker;
+    if (appUpdateNotice) appUpdateNotice.hidden = false;
+};
+
+appUpdateAction?.addEventListener('click', () => {
+    const worker = pendingServiceWorker || serviceWorkerRegistration?.waiting;
+    if (worker) {
+        worker.postMessage({ type: 'SKIP_WAITING' });
+        return;
+    }
+
+    window.location.reload();
+});
+
+const watchServiceWorkerUpdate = registration => {
+    if (registration.waiting && navigator.serviceWorker.controller) showAppUpdate(registration.waiting);
+
+    registration.addEventListener('updatefound', () => {
+        const worker = registration.installing;
+        worker?.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) showAppUpdate(worker);
+        });
+    });
+};
 
 const registerServiceWorker = () => {
     if (!serviceWorkerUrl || !serviceWorkerScope || !('serviceWorker' in navigator) || !window.isSecureContext) {
@@ -35,6 +64,7 @@ const registerServiceWorker = () => {
         scope: serviceWorkerScope,
         updateViaCache: 'none',
     }).then(registration => {
+        watchServiceWorkerUpdate(registration);
         registration.update().catch(() => {});
         return registration;
     });
@@ -52,6 +82,52 @@ if (serviceWorkerUrl && 'serviceWorker' in navigator && window.isSecureContext) 
         window.location.reload();
     });
     window.addEventListener('load', () => registerServiceWorker().catch(() => {}));
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible') registerServiceWorker().then(registration => registration?.update()).catch(() => {});
+    }, 60000);
+}
+
+const adminLiveStatusUrl = document.querySelector('meta[name="admin-live-status-url"]')?.content;
+const initialAppVersion = document.querySelector('meta[name="app-version"]')?.content;
+let adminStatusRequestInFlight = false;
+
+const setCounter = (selector, count, maximum = null) => {
+    document.querySelectorAll(selector).forEach(counter => {
+        counter.hidden = count < 1;
+        counter.textContent = maximum && count > maximum ? `${maximum}+` : String(count);
+    });
+};
+
+const refreshAdminStatus = async () => {
+    if (!adminLiveStatusUrl || adminStatusRequestInFlight) return;
+    adminStatusRequestInFlight = true;
+
+    try {
+        const response = await fetch(adminLiveStatusUrl, {
+            headers: { Accept: 'application/json' },
+            cache: 'no-store',
+            credentials: 'same-origin',
+        });
+        if (!response.ok) throw new Error('Live status request failed');
+
+        const status = await response.json();
+        setCounter('[data-admin-notifications-count]', Number(status.unread_notifications || 0), 9);
+        if (status.new_requests !== undefined) setCounter('[data-admin-requests-count]', Number(status.new_requests || 0));
+        if (initialAppVersion && status.app_version && status.app_version !== initialAppVersion) showAppUpdate();
+    } catch {
+        // Keep the current counters visible during a temporary connection outage.
+    } finally {
+        adminStatusRequestInFlight = false;
+    }
+};
+
+if (adminLiveStatusUrl) {
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible') refreshAdminStatus();
+    }, 60000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') refreshAdminStatus();
+    });
 }
 
 document.querySelectorAll('[data-guest-menu]').forEach(menu => {
@@ -369,6 +445,7 @@ if (guestStatusUrl && guestAccessUrl) {
 }
 
 window.addEventListener('workspace:request-changed', () => {
+    refreshAdminStatus();
     const notice = document.createElement('div');
     notice.className = 'realtime-notice';
     notice.innerHTML = '<i class="bi bi-lightning-charge-fill"></i><span><strong>Доска обновилась</strong><small>Получено новое событие заявки</small></span><button type="button" aria-label="Закрыть">&times;</button>';

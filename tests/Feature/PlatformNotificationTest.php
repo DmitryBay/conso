@@ -49,6 +49,17 @@ class PlatformNotificationTest extends TestCase
         $this->assertFalse($admin->unreadNotifications()->exists());
     }
 
+    public function test_platform_live_status_returns_the_current_notification_counter(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::SuperAdmin, 'company_id' => null]);
+        $admin->notify(new WorkspaceNotification(['title' => 'Событие', 'body' => 'Описание']));
+
+        $this->actingAs($admin)->getJson(route('platform.live-status'))
+            ->assertOk()
+            ->assertJsonPath('unread_notifications', 1)
+            ->assertJsonStructure(['app_version']);
+    }
+
     public function test_company_user_cannot_open_platform_notifications(): void
     {
         $owner = User::factory()->create(['role' => UserRole::CompanyOwner]);

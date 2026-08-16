@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LiveStatusController as PlatformLiveStatusController;
 use App\Http\Controllers\Admin\NotificationController as PlatformNotificationController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SystemController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Guest\SmartHomeController as GuestSmartHomeController;
 use App\Http\Controllers\Workspace\BackgroundLibraryController;
 use App\Http\Controllers\Workspace\DashboardController as WorkspaceDashboardController;
 use App\Http\Controllers\Workspace\GuestStayController;
+use App\Http\Controllers\Workspace\LiveStatusController;
 use App\Http\Controllers\Workspace\ManagerActionLogController;
 use App\Http\Controllers\Workspace\NotificationController;
 use App\Http\Controllers\Workspace\PushSubscriptionController;
@@ -73,6 +75,7 @@ Route::prefix('guest/{company:slug}')->name('guest.')->middleware('guest.locale'
 
 Route::prefix('platform')->name('platform.')->middleware(['auth', 'role:super_admin'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('live-status', PlatformLiveStatusController::class)->name('live-status');
     Route::resource('companies', CompanyController::class)->except('destroy');
     Route::post('users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('users.impersonate');
     Route::resource('users', PlatformUserController::class)->only(['index', 'edit', 'update']);
@@ -86,6 +89,7 @@ Route::prefix('platform')->name('platform.')->middleware(['auth', 'role:super_ad
 
 Route::prefix('workspace')->name('workspace.')->middleware(['auth', 'role:company_owner,manager', 'company', 'workspace.locale', 'manager.audit'])->group(function () {
     Route::get('/', WorkspaceDashboardController::class)->name('dashboard');
+    Route::get('live-status', LiveStatusController::class)->name('live-status');
 
     Route::get('requests', [ServiceRequestController::class, 'index'])->name('requests.index');
     Route::post('requests', [ServiceRequestController::class, 'store'])->name('requests.store');

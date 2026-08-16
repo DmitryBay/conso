@@ -25,4 +25,5 @@ return [
     'role' => ['super_admin' => 'Адміністратор платформи', 'company_owner' => 'Власник компанії', 'manager' => 'Менеджер', 'guest' => 'Гість'],
     'status' => ['new' => 'Нові', 'accepted' => 'Прийняті', 'in_progress' => 'В роботі', 'waiting_guest' => 'Очікують гостя', 'ready' => 'Готово', 'completed' => 'Завершені', 'cancelled' => 'Скасовані'],
     'priority' => ['low' => 'Низький', 'normal' => 'Звичайний', 'high' => 'Високий', 'urgent' => 'Терміновий'],
+    'app_update_title' => 'Доступне оновлення', 'app_update_message' => 'Оновіть застосунок, не закриваючи його.', 'app_update_action' => 'Оновити',
 ];

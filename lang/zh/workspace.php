@@ -25,4 +25,5 @@ return [
     'role' => ['super_admin' => '平台管理员', 'company_owner' => '公司所有者', 'manager' => '经理', 'guest' => '住客'],
     'status' => ['new' => '新建', 'accepted' => '已接单', 'in_progress' => '处理中', 'waiting_guest' => '等待住客', 'ready' => '已准备好', 'completed' => '已完成', 'cancelled' => '已取消'],
     'priority' => ['low' => '低', 'normal' => '普通', 'high' => '高', 'urgent' => '紧急'],
+    'app_update_title' => '有可用更新', 'app_update_message' => '无需关闭应用即可更新。', 'app_update_action' => '更新',
 ];

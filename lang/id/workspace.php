@@ -26,4 +26,5 @@ return [
     'role' => ['super_admin' => 'Administrator platform', 'company_owner' => 'Pemilik perusahaan', 'manager' => 'Manajer', 'guest' => 'Tamu'],
     'status' => ['new' => 'Baru', 'accepted' => 'Diterima', 'in_progress' => 'Diproses', 'waiting_guest' => 'Menunggu tamu', 'ready' => 'Siap', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'],
     'priority' => ['low' => 'Rendah', 'normal' => 'Normal', 'high' => 'Tinggi', 'urgent' => 'Mendesak'],
+    'app_update_title' => 'Pembaruan tersedia', 'app_update_message' => 'Perbarui aplikasi tanpa menutupnya.', 'app_update_action' => 'Perbarui',
 ];

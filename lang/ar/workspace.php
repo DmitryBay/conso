@@ -26,4 +26,5 @@ return [
     'role' => ['super_admin' => 'مدير المنصة', 'company_owner' => 'مالك الشركة', 'manager' => 'مدير', 'guest' => 'نزيل'],
     'status' => ['new' => 'جديد', 'accepted' => 'مقبول', 'in_progress' => 'قيد التنفيذ', 'waiting_guest' => 'بانتظار النزيل', 'ready' => 'جاهز', 'completed' => 'مكتمل', 'cancelled' => 'ملغى'],
     'priority' => ['low' => 'منخفضة', 'normal' => 'عادية', 'high' => 'عالية', 'urgent' => 'عاجلة'],
+    'app_update_title' => 'يتوفر تحديث', 'app_update_message' => 'حدّث التطبيق دون إغلاقه.', 'app_update_action' => 'تحديث',
 ];

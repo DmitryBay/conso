@@ -25,4 +25,5 @@ return [
     'role' => ['super_admin' => '플랫폼 관리자', 'company_owner' => '회사 소유자', 'manager' => '매니저', 'guest' => '투숙객'],
     'status' => ['new' => '신규', 'accepted' => '접수됨', 'in_progress' => '처리 중', 'waiting_guest' => '투숙객 대기', 'ready' => '준비 완료', 'completed' => '완료', 'cancelled' => '취소됨'],
     'priority' => ['low' => '낮음', 'normal' => '보통', 'high' => '높음', 'urgent' => '긴급'],
+    'app_update_title' => '업데이트 사용 가능', 'app_update_message' => '앱을 닫지 않고 업데이트하세요.', 'app_update_action' => '업데이트',
 ];

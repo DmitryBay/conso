@@ -40,4 +40,5 @@ return [
     'role' => ['super_admin' => 'Platform administrator', 'company_owner' => 'Company owner', 'manager' => 'Manager', 'guest' => 'Guest'],
     'status' => ['new' => 'New', 'accepted' => 'Accepted', 'in_progress' => 'In progress', 'waiting_guest' => 'Waiting for guest', 'ready' => 'Ready / completed', 'completed' => 'Ready / completed', 'cancelled' => 'Cancelled'],
     'priority' => ['low' => 'Low', 'normal' => 'Normal', 'high' => 'High', 'urgent' => 'Urgent'],
+    'app_update_title' => 'Update available', 'app_update_message' => 'Update the app without closing it.', 'app_update_action' => 'Update',
 ];

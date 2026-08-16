@@ -192,7 +192,8 @@ class GuestStayManagementTest extends TestCase
 
         $this->actingAs($manager)->get(route('workspace.requests.index'))
             ->assertOk()
-            ->assertSee('<span class="sidebar-badge">1</span>', false)
+            ->assertSee('data-admin-requests-count', false)
+            ->assertSee('>1</span>', false)
             ->assertSee('Current request')
             ->assertDontSee('Past request')
             ->assertViewHas('requests', fn ($requests) => $requests->get(RequestStatus::New->value)?->count() === 1);

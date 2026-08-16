@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="admin-live-status-url" content="{{ route('platform.live-status') }}">
+    <meta name="app-version" content="{{ \App\Support\AppVersion::current() }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
     <title>@yield('title', 'Platform') · {{ $platformName }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -23,7 +25,7 @@
     <main class="main-area">
         <div class="topbar">
             <div class="breadcrumb-copy"><div class="small fw-semibold">Управление платформой</div><div class="text-secondary" style="font-size:11px">{{ now()->translatedFormat('d F Y') }}</div></div>
-            <div class="d-flex align-items-center gap-2 ms-auto"><a class="btn btn-light btn-sm position-relative" href="{{ route('platform.notifications.index') }}" aria-label="Уведомления"><i class="bi bi-bell"></i>@if(auth()->user()->unreadNotifications()->count())<span class="notification-count">{{ min(auth()->user()->unreadNotifications()->count(), 9) }}</span>@endif</a><a class="avatar" href="{{ route('platform.users.edit', auth()->user()) }}" aria-label="Мой профиль">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 2)) }}</a></div>
+            <div class="d-flex align-items-center gap-2 ms-auto"><a class="btn btn-light btn-sm position-relative" href="{{ route('platform.notifications.index') }}" aria-label="Уведомления"><i class="bi bi-bell"></i>@php($unreadCount=auth()->user()->unreadNotifications()->count())<span class="notification-count" data-admin-notifications-count @if(!$unreadCount) hidden @endif>{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span></a><a class="avatar" href="{{ route('platform.users.edit', auth()->user()) }}" aria-label="Мой профиль">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 2)) }}</a></div>
         </div>
         <div class="content-wrap">
             @if(session('success'))<div class="alert alert-success d-flex align-items-center gap-2 mb-4"><i class="bi bi-check-circle-fill"></i>{{ session('success') }}</div>@endif
@@ -32,6 +34,7 @@
         </div>
     </main>
 </div>
+@include('layouts.partials.app-update', ['title' => 'Доступно обновление', 'message' => 'Можно обновить приложение без закрытия.', 'action' => 'Обновить'])
 @stack('scripts')
 </body>
 </html>

@@ -40,4 +40,5 @@ return [
     'role' => ['super_admin' => 'Администратор платформы', 'company_owner' => 'Владелец компании', 'manager' => 'Менеджер', 'guest' => 'Гость'],
     'status' => ['new' => 'Новые', 'accepted' => 'Приняты', 'in_progress' => 'В работе', 'waiting_guest' => 'Ожидают гостя', 'ready' => 'Готово / завершено', 'completed' => 'Готово / завершено', 'cancelled' => 'Отменены'],
     'priority' => ['low' => 'Низкий', 'normal' => 'Обычный', 'high' => 'Высокий', 'urgent' => 'Срочный'],
+    'app_update_title' => 'Доступно обновление', 'app_update_message' => 'Можно обновить приложение без закрытия.', 'app_update_action' => 'Обновить',
 ];

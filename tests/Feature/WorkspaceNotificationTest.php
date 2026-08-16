@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\CompanyStatus;
+use App\Enums\RequestStatus;
 use App\Enums\UserRole;
 use App\Models\Company;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Notifications\WorkspaceNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,5 +42,37 @@ class WorkspaceNotificationTest extends TestCase
             ->assertSee('Новая заявка');
 
         $this->assertFalse($owner->unreadNotifications()->exists());
+    }
+
+    public function test_live_status_returns_request_and_notification_counters(): void
+    {
+        $company = Company::create([
+            'public_id' => (string) Str::uuid(),
+            'name' => 'Status Hotel',
+            'slug' => 'status-hotel',
+            'status' => CompanyStatus::Active,
+            'currency' => 'IDR',
+            'timezone' => 'Asia/Makassar',
+            'plan' => 'MVP',
+        ]);
+        $owner = User::factory()->create([
+            'company_id' => $company->id,
+            'role' => UserRole::CompanyOwner,
+        ]);
+        ServiceRequest::create([
+            'public_id' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'room_number' => '101',
+            'title' => 'Новая заявка',
+            'status' => RequestStatus::New,
+            'priority' => 'normal',
+        ]);
+        $owner->notify(new WorkspaceNotification(['title' => 'Событие', 'body' => 'Описание']));
+
+        $this->actingAs($owner)->getJson(route('workspace.live-status'))
+            ->assertOk()
+            ->assertJsonPath('new_requests', 1)
+            ->assertJsonPath('unread_notifications', 1)
+            ->assertJsonStructure(['app_version']);
     }
 }

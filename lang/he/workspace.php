@@ -25,4 +25,5 @@ return [
     'role' => ['super_admin' => 'מנהל פלטפורמה', 'company_owner' => 'בעל חברה', 'manager' => 'מנהל', 'guest' => 'אורח'],
     'status' => ['new' => 'חדש', 'accepted' => 'התקבל', 'in_progress' => 'בטיפול', 'waiting_guest' => 'ממתין לאורח', 'ready' => 'מוכן', 'completed' => 'הושלם', 'cancelled' => 'בוטל'],
     'priority' => ['low' => 'נמוכה', 'normal' => 'רגילה', 'high' => 'גבוהה', 'urgent' => 'דחופה'],
+    'app_update_title' => 'עדכון זמין', 'app_update_message' => 'אפשר לעדכן את היישום בלי לסגור אותו.', 'app_update_action' => 'עדכון',
 ];
