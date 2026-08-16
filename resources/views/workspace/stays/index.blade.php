@@ -95,9 +95,9 @@
 </section>
 
 <div class="row g-3 mb-4">
-    <div class="col-4"><div class="surface-card metric-card"><span class="metric-icon metric-green"><i class="bi bi-door-open"></i></span><div class="metric-value">{{ $active->count() }}</div><div class="metric-label">{{ __('workspace.stay_checked_in_plural') }}</div></div></div>
-    <div class="col-4"><div class="surface-card metric-card"><span class="metric-icon metric-blue"><i class="bi bi-calendar2-check"></i></span><div class="metric-value">{{ $upcoming->count() }}</div><div class="metric-label">{{ __('workspace.stay_upcoming_plural') }}</div></div></div>
-    <div class="col-4"><div class="surface-card metric-card"><span class="metric-icon"><i class="bi bi-archive"></i></span><div class="metric-value">{{ $completed->count() }}</div><div class="metric-label">{{ __('workspace.stay_completed_plural') }}</div></div></div>
+    <div class="col-4"><div class="surface-card metric-card workspace-metric-card"><span class="metric-icon metric-green"><i class="bi bi-door-open"></i></span><div class="metric-value">{{ $active->count() }}</div><div class="metric-label">{{ __('workspace.stay_checked_in_plural') }}</div></div></div>
+    <div class="col-4"><div class="surface-card metric-card workspace-metric-card"><span class="metric-icon metric-blue"><i class="bi bi-calendar2-check"></i></span><div class="metric-value">{{ $upcoming->count() }}</div><div class="metric-label">{{ __('workspace.stay_upcoming_plural') }}</div></div></div>
+    <div class="col-4"><div class="surface-card metric-card workspace-metric-card"><span class="metric-icon"><i class="bi bi-archive"></i></span><div class="metric-value">{{ $completed->count() }}</div><div class="metric-label">{{ __('workspace.stay_completed_plural') }}</div></div></div>
 </div>
 
 <div class="surface-card overflow-hidden"><div class="table-responsive"><table class="table"><thead><tr><th>{{ __('workspace.guest') }}</th><th>{{ __('workspace.room') }}</th><th>PIN</th><th>{{ __('workspace.stay_period') }}</th><th>{{ __('workspace.nights') }}</th><th>{{ __('workspace.status_label') }}</th><th>{{ __('workspace.stay_bill') }}</th><th></th></tr></thead><tbody>
