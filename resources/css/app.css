@@ -354,6 +354,8 @@ a { text-decoration: none; }
 .guest-textarea { padding:13px; resize:vertical; }
 .guest-input-wrap input:focus,.guest-textarea:focus { background:#fff; border-color:#6e9088; box-shadow:0 0 0 3px rgba(35,85,76,.08); }
 .guest-field-hint { color:var(--guest-muted); display:block; font-size:9px; line-height:1.45; margin-top:6px; }
+.guest-access-pin-error { color:#a84843; font-size:12px; margin:8px 0 0; }
+.guest-access-pin-error i { margin-inline-end:6px; }
 .guest-access-form .guest-primary-button { margin-top:24px; }
 .guest-secure-note { color:#919a97; font-size:9px; margin-top:18px; text-align:center; }
 

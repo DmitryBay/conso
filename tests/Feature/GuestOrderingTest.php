@@ -52,11 +52,16 @@ class GuestOrderingTest extends TestCase
         [$company, $room] = $this->hotel('Alpha Hotel');
         $this->guestStay($company, $room, null);
 
-        $this->from(url('/guest-sw.js?v=1786767936'))->post(route('guest.access.store', $company), [
+        $response = $this->from(url('/guest-sw.js?v=1786767936'))->post(route('guest.access.store', $company), [
             'room_number' => $room->number,
             'pin' => '9999',
             'country_code' => 'RU',
-        ])->assertRedirect(route('guest.access', $company))->assertSessionHas('guest_error');
+        ]);
+
+        $response->assertRedirect(route('guest.access', $company))->assertSessionHas('guest_error');
+
+        $this->followRedirects($response)->assertSee('id="guestAccessPinError"', false)
+            ->assertSee(__('guest.invalid_stay_access'));
 
         $this->assertDatabaseCount('guest_sessions', 0);
     }

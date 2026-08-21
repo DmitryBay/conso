@@ -34,7 +34,7 @@
         @if(session('guest_success'))
             <div class="guest-alert success"><i class="bi bi-check-circle-fill"></i><span>{{ session('guest_success') }}</span></div>
         @endif
-        @if(session('guest_error'))
+        @if(session('guest_error') && !request()->routeIs('guest.access'))
             <div class="guest-alert error"><i class="bi bi-exclamation-circle-fill"></i><span>{{ session('guest_error') }}</span></div>
         @endif
         @if($errors->any())
