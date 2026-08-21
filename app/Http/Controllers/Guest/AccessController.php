@@ -87,7 +87,9 @@ class AccessController extends Controller
         ]);
         $key = 'guest-access:'.$company->id.':'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return back()->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))->with('guest_error', __('guest.too_many_attempts'));
+            return redirect()->route('guest.access', $company)
+                ->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))
+                ->with('guest_error', __('guest.too_many_attempts'));
         }
 
         $roomIdentifier = trim($data['room_number']);
@@ -106,7 +108,9 @@ class AccessController extends Controller
         if (! $room || ! $stay || ! Hash::check($data['pin'], $stay->access_pin_hash)) {
             RateLimiter::hit($key, 60);
 
-            return back()->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))->with('guest_error', __('guest.invalid_stay_access'));
+            return redirect()->route('guest.access', $company)
+                ->withInput($request->only('room_number', 'guest_name', 'guest_email', 'country_code'))
+                ->with('guest_error', __('guest.invalid_stay_access'));
         }
 
         RateLimiter::clear($key);

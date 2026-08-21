@@ -52,7 +52,7 @@ class GuestOrderingTest extends TestCase
         [$company, $room] = $this->hotel('Alpha Hotel');
         $this->guestStay($company, $room, null);
 
-        $this->from(route('guest.access', $company))->post(route('guest.access.store', $company), [
+        $this->from(url('/guest-sw.js?v=1786767936'))->post(route('guest.access.store', $company), [
             'room_number' => $room->number,
             'pin' => '9999',
             'country_code' => 'RU',
