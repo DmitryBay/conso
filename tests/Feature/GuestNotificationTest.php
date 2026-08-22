@@ -72,6 +72,38 @@ class GuestNotificationTest extends TestCase
         $this->assertDatabaseMissing('push_subscriptions', ['endpoint' => $endpoint]);
     }
 
+    public function test_push_notification_uses_the_language_currently_selected_by_the_guest(): void
+    {
+        [$company, $room, $stay] = $this->hotel();
+        $session = $this->guestSession($company, $room, $stay, 'id');
+
+        $this->withSession(['guest_session.'.$company->id => $session->public_id])
+            ->get(route('guest.catalog', $company).'?lang=en')
+            ->assertOk();
+
+        $this->assertSame('en', $session->fresh()->locale);
+
+        $serviceRequest = ServiceRequest::create([
+            'public_id' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'guest_stay_id' => $stay->id,
+            'guest_session_id' => $session->id,
+            'source' => 'guest',
+            'room_number' => $room->number,
+            'guest_name' => 'Anna',
+            'title' => 'Breakfast',
+            'status' => RequestStatus::InProgress,
+            'priority' => RequestPriority::Normal,
+        ]);
+
+        $push = (new GuestRequestStatusNotification($serviceRequest->load('company')))
+            ->toWebPush($session->fresh())
+            ->toArray();
+
+        $this->assertSame('Request: Processing', $push['title']);
+        $this->assertSame('en', $push['lang']);
+    }
+
     public function test_shared_tablet_subscription_moves_to_the_new_guest_session(): void
     {
         [$company, $room, $stay] = $this->hotel();
