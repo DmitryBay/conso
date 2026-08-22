@@ -41,12 +41,16 @@ class PushSubscriptionController extends Controller
     {
         abort_unless($request->user()->pushSubscriptions()->exists(), 422, 'Сначала включите push-уведомления.');
 
+        $isPlatformAdmin = $request->user()->isSuperAdmin();
+
         $request->user()->notify(new WorkspaceNotification([
             'title_key' => 'workspace.push_test_title',
             'body_key' => 'workspace.push_test_body',
             'params' => [],
             'request_id' => null,
-            'url' => route('workspace.notifications.index'),
+            'url' => $isPlatformAdmin
+                ? route('platform.notifications.index')
+                : route('workspace.notifications.index'),
             'icon' => 'bi-phone-vibrate',
             'push' => true,
         ]));

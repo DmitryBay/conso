@@ -82,6 +82,9 @@ Route::prefix('platform')->name('platform.')->middleware(['auth', 'role:super_ad
     Route::get('notifications', [PlatformNotificationController::class, 'index'])->name('notifications.index');
     Route::patch('notifications/read-all', [PlatformNotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::get('notifications/{notification}', [PlatformNotificationController::class, 'read'])->name('notifications.read');
+    Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+    Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
+    Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test'])->name('push-subscriptions.test');
     Route::get('system', SystemController::class)->name('system');
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');

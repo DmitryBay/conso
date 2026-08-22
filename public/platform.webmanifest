@@ -1,0 +1,17 @@
+{
+  "id": "/platform",
+  "name": "Luma Platform",
+  "short_name": "Luma Platform",
+  "description": "Luma Concierge platform administration",
+  "start_url": "/platform/",
+  "scope": "/platform",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "any",
+  "background_color": "#f6f3ed",
+  "theme_color": "#183c36",
+  "icons": [
+    {"src": "/app-icons/luma-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/app-icons/luma-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

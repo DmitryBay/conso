@@ -59,6 +59,27 @@ class PushNotificationTest extends TestCase
         ]);
     }
 
+    public function test_platform_admin_can_subscribe_and_receive_a_test_push(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['role' => UserRole::SuperAdmin, 'company_id' => null]);
+        $endpoint = 'https://push.example.test/subscriptions/platform-device';
+
+        $this->actingAs($admin)->postJson(route('platform.push-subscriptions.store'), [
+            'endpoint' => $endpoint,
+            'keys' => ['p256dh' => Str::random(87), 'auth' => Str::random(22)],
+            'content_encoding' => 'aes128gcm',
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $this->actingAs($admin)->postJson(route('platform.push-subscriptions.test'))
+            ->assertOk()->assertJson(['ok' => true]);
+
+        Notification::assertSentTo($admin, WorkspaceNotification::class, function (WorkspaceNotification $notification, array $channels) {
+            return $channels === ['database', WebPushChannel::class]
+                && $notification->toArray(new \stdClass)['url'] === route('platform.notifications.index');
+        });
+    }
+
     public function test_push_payload_adds_webpush_channel(): void
     {
         Notification::fake();

@@ -3,11 +3,21 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="admin-live-status-url" content="{{ route('platform.live-status') }}">
     <meta name="app-version" content="{{ \App\Support\AppVersion::current() }}">
+    <meta name="theme-color" content="#183c36">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Luma Platform">
+    <meta name="webpush-public-key" content="{{ config('webpush.vapid.public_key') }}">
+    <meta name="webpush-store-url" content="{{ route('platform.push-subscriptions.store') }}">
+    <meta name="webpush-test-url" content="{{ route('platform.push-subscriptions.test') }}">
+    <meta name="webpush-service-worker" content="/platform-sw.js">
+    <meta name="webpush-scope" content="/platform/">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('app-icons/luma-180.png') }}">
+    <link rel="manifest" href="{{ asset('platform.webmanifest') }}">
     <title>@yield('title', 'Platform') · {{ $platformName }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

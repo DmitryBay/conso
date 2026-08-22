@@ -21,7 +21,11 @@ class PlatformAccessTest extends TestCase
     {
         $admin = User::factory()->create(['role' => UserRole::SuperAdmin, 'company_id' => null]);
 
-        $this->actingAs($admin)->get('/platform')->assertOk()->assertSee('Обзор платформы');
+        $this->actingAs($admin)->get('/platform')->assertOk()
+            ->assertSee('Обзор платформы')
+            ->assertSee('platform.webmanifest')
+            ->assertSee('platform-sw.js')
+            ->assertSee('/platform/push-subscriptions');
     }
 
     public function test_company_owner_cannot_open_platform(): void

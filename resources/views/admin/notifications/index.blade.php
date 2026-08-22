@@ -15,6 +15,11 @@
         </form>
     @endif
 </div>
+<div class="surface-card push-settings-card mb-3" id="pushSettings" data-enabled="Push-уведомления включены" data-disabled="Push-уведомления выключены" data-enable="Включить push" data-disable="Выключить push" data-unsupported="Push-уведомления не поддерживаются этим браузером" data-denied="Разрешение на уведомления отключено в настройках браузера" data-error="Не удалось настроить push-уведомления" data-test-sent="Тестовое уведомление отправлено">
+    <div class="push-settings-icon"><i class="bi bi-phone-vibrate"></i></div>
+    <div class="flex-grow-1"><h2>Push-уведомления</h2><p>Получайте важные события платформы, даже когда кабинет закрыт.</p><small id="pushStatus">Проверяем настройки уведомлений…</small></div>
+    <div class="d-flex gap-2 flex-wrap"><button class="btn btn-light" id="pushTestButton" type="button" hidden><i class="bi bi-send me-2"></i>Проверить</button><button class="btn btn-primary" id="pushToggleButton" type="button"><i class="bi bi-bell me-2"></i><span>Включить push</span></button></div>
+</div>
 <div class="surface-card overflow-hidden">
     <div class="notification-list">
         @forelse($notifications as $notification)
