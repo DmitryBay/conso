@@ -27,4 +27,5 @@ return [
     'status' => ['new' => 'Baru', 'accepted' => 'Diterima', 'in_progress' => 'Diproses', 'waiting_guest' => 'Menunggu tamu', 'ready' => 'Siap', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'],
     'priority' => ['low' => 'Rendah', 'normal' => 'Normal', 'high' => 'Tinggi', 'urgent' => 'Mendesak'],
     'app_update_title' => 'Pembaruan tersedia', 'app_update_message' => 'Perbarui aplikasi tanpa menutupnya.', 'app_update_action' => 'Perbarui',
+    'payment_method' => 'Metode pembayaran', 'payment_method_hint' => 'Layanan gratis tidak memerlukan metode pembayaran.', 'payment_method_required' => 'Pilih metode pembayaran untuk layanan berbayar.', 'payment_options' => ['prepayment' => 'Prabayar penuh', 'online' => 'Pembayaran online', 'cash' => 'Pembayaran tunai', 'room_charge' => 'Bayar saat check-out'],
 ];

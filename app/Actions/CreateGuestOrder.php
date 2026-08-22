@@ -15,12 +15,15 @@ use Illuminate\Support\Str;
 
 class CreateGuestOrder
 {
-    public function handle(GuestSession $stay, ServiceNode $service, int $quantity, string $paymentMethod, ?string $comment, array $selectedOptions = []): ServiceRequest
+    public function handle(GuestSession $stay, ServiceNode $service, int $quantity, ?string $comment, array $selectedOptions = []): ServiceRequest
     {
         abort_unless($service->company_id === $stay->company_id && $service->is_active && ! $service->isCategory(), 404);
-        $total = ($service->price_minor ?? 0) * $quantity;
+        $order = DB::transaction(function () use ($stay, $service, $quantity, $comment, $selectedOptions) {
+            $service = ServiceNode::query()->lockForUpdate()->findOrFail($service->id);
+            abort_unless($service->company_id === $stay->company_id && $service->is_active && ! $service->isCategory(), 404);
+            $total = ($service->price_minor ?? 0) * $quantity;
+            $paymentMethod = $total > 0 ? ($service->payment_method ?? 'room_charge') : null;
 
-        $order = DB::transaction(function () use ($stay, $service, $quantity, $paymentMethod, $comment, $total, $selectedOptions) {
             $order = ServiceRequest::create([
                 'public_id' => (string) Str::uuid(),
                 'company_id' => $stay->company_id,
@@ -35,7 +38,7 @@ class CreateGuestOrder
                 'status' => RequestStatus::New,
                 'priority' => RequestPriority::Normal,
                 'price_minor' => $total,
-                'payment_method' => $total > 0 ? $paymentMethod : null,
+                'payment_method' => $paymentMethod,
                 'payment_status' => match (true) {
                     $total === 0 => 'not_required',
                     $paymentMethod === 'cash' => 'paid',

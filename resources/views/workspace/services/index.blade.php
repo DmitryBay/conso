@@ -18,7 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = JSON.parse(document.getElementById('serviceNodeTranslations').textContent);
     const options = JSON.parse(document.getElementById('serviceNodeOptions').textContent);
     const toggleFields = modal => { const type=modal.querySelector('.node-type-select').value; modal.querySelector('.node-service-fields').classList.toggle('d-none',type!=='service'); };
+    const togglePaymentMethod = modal => { const price=Number(modal.querySelector('.node-price').value||0); modal.querySelector('.node-payment-method').classList.toggle('d-none',price<=0); };
     document.querySelectorAll('.node-type-select').forEach(el=>{el.addEventListener('change',()=>toggleFields(el.closest('.modal'))); toggleFields(el.closest('.modal'));});
+    document.querySelectorAll('.node-price').forEach(el=>{el.addEventListener('input',()=>togglePaymentMethod(el.closest('.modal'))); togglePaymentMethod(el.closest('.modal'));});
     document.querySelectorAll('.add-child-node').forEach(btn=>btn.addEventListener('click',()=>{document.querySelector('#addNodeModal .node-parent').value=btn.dataset.parent;}));
     document.querySelectorAll('.edit-service-node').forEach(btn=>btn.addEventListener('click',()=>{
         const modal=document.getElementById('editNodeModal');
@@ -29,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('.node-description').value=btn.dataset.description||'';
         modal.querySelector('.node-icon').value=btn.dataset.icon||'bi-stars';
         modal.querySelector('.node-price').value=btn.dataset.price||'';
+        modal.querySelector('.node-payment').value=btn.dataset.paymentMethod||'room_charge';
         modal.querySelector('.node-sla').value=btn.dataset.sla||'';
         modal.querySelector('.node-order').value=btn.dataset.order||0;
         modal.querySelector('.node-active').checked=btn.dataset.active==='1';
@@ -45,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const background=modal.querySelector('.node-background[value="'+(btn.dataset.backgroundImage||'')+'"]');
         if(background) background.checked=true;
         toggleFields(modal);
+        togglePaymentMethod(modal);
     }));
 });
 </script>

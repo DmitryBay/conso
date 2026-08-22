@@ -26,4 +26,5 @@ return [
     'status' => ['new' => 'חדש', 'accepted' => 'התקבל', 'in_progress' => 'בטיפול', 'waiting_guest' => 'ממתין לאורח', 'ready' => 'מוכן', 'completed' => 'הושלם', 'cancelled' => 'בוטל'],
     'priority' => ['low' => 'נמוכה', 'normal' => 'רגילה', 'high' => 'גבוהה', 'urgent' => 'דחופה'],
     'app_update_title' => 'עדכון זמין', 'app_update_message' => 'אפשר לעדכן את היישום בלי לסגור אותו.', 'app_update_action' => 'עדכון',
+    'payment_method' => 'אמצעי תשלום', 'payment_method_hint' => 'לא נדרש אמצעי תשלום לשירות חינמי.', 'payment_method_required' => 'בחרו אמצעי תשלום לשירות בתשלום.', 'payment_options' => ['prepayment' => 'תשלום מלא מראש', 'online' => 'תשלום מקוון', 'cash' => 'תשלום במזומן', 'room_charge' => 'תשלום בעת העזיבה'],
 ];

@@ -26,4 +26,5 @@ return [
     'status' => ['new' => '신규', 'accepted' => '접수됨', 'in_progress' => '처리 중', 'waiting_guest' => '투숙객 대기', 'ready' => '준비 완료', 'completed' => '완료', 'cancelled' => '취소됨'],
     'priority' => ['low' => '낮음', 'normal' => '보통', 'high' => '높음', 'urgent' => '긴급'],
     'app_update_title' => '업데이트 사용 가능', 'app_update_message' => '앱을 닫지 않고 업데이트하세요.', 'app_update_action' => '업데이트',
+    'payment_method' => '결제 방법', 'payment_method_hint' => '무료 서비스에는 결제 방법이 필요하지 않습니다.', 'payment_method_required' => '유료 서비스의 결제 방법을 선택하세요.', 'payment_options' => ['prepayment' => '전액 선결제', 'online' => '온라인 결제', 'cash' => '현금 결제', 'room_charge' => '체크아웃 시 결제'],
 ];

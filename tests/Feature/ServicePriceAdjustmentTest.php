@@ -28,7 +28,7 @@ class ServicePriceAdjustmentTest extends TestCase
     public function test_catalog_price_and_name_changes_do_not_change_existing_order_or_bill(): void
     {
         [$company, $manager, $room, $stay, $session, $service] = $this->fixtures();
-        $order = app(CreateGuestOrder::class)->handle($session->load('room'), $service, 1, 'room_charge', null);
+        $order = app(CreateGuestOrder::class)->handle($session->load('room'), $service, 1, null);
 
         $service->update(['name' => 'New airport transfer', 'price_minor' => 250000]);
 
@@ -51,7 +51,7 @@ class ServicePriceAdjustmentTest extends TestCase
     public function test_manager_can_adjust_snapshot_price_with_service_comment_and_audit_trail(): void
     {
         [$company, $manager, $room, $stay, $session, $service] = $this->fixtures();
-        $order = app(CreateGuestOrder::class)->handle($session->load('room'), $service, 1, 'room_charge', null);
+        $order = app(CreateGuestOrder::class)->handle($session->load('room'), $service, 1, null);
         $item = $order->items()->firstOrFail();
 
         $this->actingAs($manager)->patch(route('workspace.requests.price', $order), [

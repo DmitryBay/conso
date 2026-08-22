@@ -32,4 +32,5 @@ return [
     'email_notifications' => '이메일 알림', 'save_email' => '이메일 저장', 'notification_email_saved' => '알림 이메일이 저장되었습니다.', 'notification_expiry_hint' => ':date 체크아웃 후 알림이 자동으로 중지됩니다.',
     'notification_status_title' => '요청: :status', 'notification_status_body' => ':room호실의 “:request” 요청이 “:status” 상태로 변경되었습니다.', 'notification_email_greeting' => '안녕하세요, :name님!', 'notification_open_request' => '요청 열기', 'notification_email_footer' => '투숙 기간 중 :company에서 보낸 자동 알림입니다.',
     'invalid_access' => '객실 번호 또는 PIN이 일치하지 않습니다.', 'invalid_stay_access' => '객실과 PIN에 맞는 유효한 투숙이 없습니다.', 'stay_until' => '까지', 'too_many_attempts' => '시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.', 'access_required' => '객실 번호와 PIN을 입력하세요.',
+    'payment_set_by_hotel' => '호텔에서 결제 방법을 지정합니다.', 'payment_options' => ['prepayment' => '전액 선결제', 'online' => '온라인 결제', 'cash' => '현금 결제', 'room_charge' => '체크아웃 시 결제'], 'payment_option_hints' => ['prepayment' => '서비스 전에 전액 결제가 필요합니다.', 'online' => '온라인으로 결제합니다.', 'cash' => '직원에게 현금으로 결제하세요.', 'room_charge' => '금액이 투숙 청구서에 추가됩니다.'],
 ];

@@ -11,6 +11,7 @@ use App\Support\ServiceOptionCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ServiceTreeController extends Controller
@@ -35,11 +36,14 @@ class ServiceTreeController extends Controller
         $this->validateBackground($request, $data['background_image_id'] ?? null);
         $parent = $this->validatedParent($companyId, $data['parent_id'] ?? null);
 
+        $priceMinor = $data['type'] === ServiceNodeType::Service->value ? $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency) : null;
+
         ServiceNode::create([
             ...$data,
             'company_id' => $companyId,
             'parent_id' => $parent?->id,
-            'price_minor' => $data['type'] === ServiceNodeType::Service->value ? $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency) : null,
+            'price_minor' => $priceMinor,
+            'payment_method' => $priceMinor > 0 ? $data['payment_method'] : null,
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
 
@@ -96,10 +100,13 @@ class ServiceTreeController extends Controller
 
         abort_if($parent?->id === $serviceNode->id || $this->isDescendant($parent, $serviceNode), 422, 'Нельзя переместить категорию внутрь самой себя.');
 
+        $priceMinor = $data['type'] === ServiceNodeType::Service->value ? $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency) : null;
+
         $serviceNode->update([
             ...$data,
             'parent_id' => $parent?->id,
-            'price_minor' => $data['type'] === ServiceNodeType::Service->value ? $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency) : null,
+            'price_minor' => $priceMinor,
+            'payment_method' => $priceMinor > 0 ? $data['payment_method'] : null,
         ]);
 
         return back()->with('success', __('workspace.service_updated'));
@@ -126,6 +133,7 @@ class ServiceTreeController extends Controller
             'background_image_id' => ['nullable', 'integer'],
             'parent_id' => ['nullable', 'integer'],
             'price' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'payment_method' => ['nullable', Rule::in(ServiceNode::PAYMENT_METHODS)],
             'sla_minutes' => ['nullable', 'integer', 'min:1', 'max:10080'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65000'],
             'is_active' => ['nullable', 'boolean'],
@@ -135,6 +143,10 @@ class ServiceTreeController extends Controller
 
         $isService = ($data['type'] ?? null) === ServiceNodeType::Service->value;
         $data['option_keys'] = $isService ? ServiceOptionCatalog::normalize($data['option_keys'] ?? []) : null;
+
+        if ($isService && $this->moneyToMinor($data['price'] ?? null, $request->user()->company->currency) > 0 && empty($data['payment_method'])) {
+            throw ValidationException::withMessages(['payment_method' => __('workspace.payment_method_required')]);
+        }
 
         if ($request->has('translations')) {
             $data['translations'] = collect($data['translations'] ?? [])

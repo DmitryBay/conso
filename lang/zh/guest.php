@@ -32,4 +32,5 @@ return [
     'email_notifications' => '邮件通知', 'save_email' => '保存邮箱', 'notification_email_saved' => '通知邮箱已保存。', 'notification_expiry_hint' => '通知将在 :date 退房后自动停止。',
     'notification_status_title' => '请求：:status', 'notification_status_body' => ':room 房的“:request”请求现已变更为“:status”。', 'notification_email_greeting' => '您好，:name！', 'notification_open_request' => '打开请求', 'notification_email_footer' => '这是您入住期间由 :company 发送的自动通知。',
     'invalid_access' => '房间号或 PIN 码不正确。', 'invalid_stay_access' => '没有与该房间和 PIN 匹配的有效住宿。', 'stay_until' => '至', 'too_many_attempts' => '尝试次数过多，请一分钟后重试。', 'access_required' => '请输入房间号和 PIN 码。',
+    'payment_set_by_hotel' => '付款方式由酒店设定。', 'payment_options' => ['prepayment' => '全额预付款', 'online' => '在线付款', 'cash' => '现金付款', 'room_charge' => '退房时付款'], 'payment_option_hints' => ['prepayment' => '服务提供前须全额付款。', 'online' => '请在线付款。', 'cash' => '请向工作人员支付现金。', 'room_charge' => '金额将计入您的住宿账单。'],
 ];

@@ -27,4 +27,5 @@ return [
     'status' => ['new' => 'جديد', 'accepted' => 'مقبول', 'in_progress' => 'قيد التنفيذ', 'waiting_guest' => 'بانتظار النزيل', 'ready' => 'جاهز', 'completed' => 'مكتمل', 'cancelled' => 'ملغى'],
     'priority' => ['low' => 'منخفضة', 'normal' => 'عادية', 'high' => 'عالية', 'urgent' => 'عاجلة'],
     'app_update_title' => 'يتوفر تحديث', 'app_update_message' => 'حدّث التطبيق دون إغلاقه.', 'app_update_action' => 'تحديث',
+    'payment_method' => 'طريقة الدفع', 'payment_method_hint' => 'لا يلزم تحديد طريقة دفع للخدمة المجانية.', 'payment_method_required' => 'اختر طريقة دفع للخدمة المدفوعة.', 'payment_options' => ['prepayment' => 'دفع كامل مقدمًا', 'online' => 'دفع عبر الإنترنت', 'cash' => 'دفع نقدي', 'room_charge' => 'الدفع عند المغادرة'],
 ];

@@ -26,4 +26,5 @@ return [
     'status' => ['new' => '新建', 'accepted' => '已接单', 'in_progress' => '处理中', 'waiting_guest' => '等待住客', 'ready' => '已准备好', 'completed' => '已完成', 'cancelled' => '已取消'],
     'priority' => ['low' => '低', 'normal' => '普通', 'high' => '高', 'urgent' => '紧急'],
     'app_update_title' => '有可用更新', 'app_update_message' => '无需关闭应用即可更新。', 'app_update_action' => '更新',
+    'payment_method' => '付款方式', 'payment_method_hint' => '免费服务无需付款方式。', 'payment_method_required' => '请为付费服务选择付款方式。', 'payment_options' => ['prepayment' => '全额预付款', 'online' => '在线付款', 'cash' => '现金付款', 'room_charge' => '退房时付款'],
 ];

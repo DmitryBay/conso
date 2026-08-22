@@ -41,4 +41,5 @@ return [
     'status' => ['new' => 'Новые', 'accepted' => 'Приняты', 'in_progress' => 'В работе', 'waiting_guest' => 'Ожидают гостя', 'ready' => 'Готово / завершено', 'completed' => 'Готово / завершено', 'cancelled' => 'Отменены'],
     'priority' => ['low' => 'Низкий', 'normal' => 'Обычный', 'high' => 'Высокий', 'urgent' => 'Срочный'],
     'app_update_title' => 'Доступно обновление', 'app_update_message' => 'Можно обновить приложение без закрытия.', 'app_update_action' => 'Обновить',
+    'payment_method' => 'Способ оплаты', 'payment_method_hint' => 'Для бесплатной услуги способ оплаты не требуется.', 'payment_method_required' => 'Выберите способ оплаты для платной услуги.', 'payment_options' => ['prepayment' => 'Полная предоплата', 'online' => 'Оплата онлайн', 'cash' => 'Оплата наличными', 'room_charge' => 'Оплата при выселении'],
 ];

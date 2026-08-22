@@ -95,6 +95,41 @@ class WorkspaceTenantIsolationTest extends TestCase
         ])->assertSessionHasErrors('option_keys.0');
     }
 
+    public function test_owner_sets_a_payment_method_only_for_paid_services(): void
+    {
+        [$company, $owner] = $this->companyWithOwner('Alpha Hotel');
+
+        $this->actingAs($owner)->post(route('workspace.services.store'), [
+            'type' => ServiceNodeType::Service->value,
+            'name' => 'Airport transfer',
+            'price' => 250000,
+            'payment_method' => 'prepayment',
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('service_nodes', [
+            'company_id' => $company->id,
+            'name' => 'Airport transfer',
+            'price_minor' => 250000,
+            'payment_method' => 'prepayment',
+        ]);
+
+        $this->post(route('workspace.services.store'), [
+            'type' => ServiceNodeType::Service->value,
+            'name' => 'Free towels',
+            'price' => 0,
+            'payment_method' => 'cash',
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('service_nodes', [
+            'company_id' => $company->id,
+            'name' => 'Free towels',
+            'price_minor' => 0,
+            'payment_method' => null,
+        ]);
+    }
+
     public function test_manager_can_take_request_and_owner_receives_notification(): void
     {
         [$company, $owner] = $this->companyWithOwner('Alpha Hotel');

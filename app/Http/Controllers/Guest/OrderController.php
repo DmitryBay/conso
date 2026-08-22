@@ -38,7 +38,6 @@ class OrderController extends Controller
         $allowedOptions = ServiceOptionCatalog::normalize($serviceNode->option_keys ?? []);
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:10'],
-            'payment_method' => [$serviceNode->price_minor ? 'required' : 'nullable', Rule::in(['room_charge', 'cash'])],
             'comment' => ['nullable', 'string', 'max:1000'],
             'selected_options' => ['nullable', 'array'],
             'selected_options.*' => ['string', 'distinct', Rule::in($allowedOptions)],
@@ -49,7 +48,6 @@ class OrderController extends Controller
             $stay,
             $serviceNode,
             (int) $data['quantity'],
-            $data['payment_method'] ?? 'room_charge',
             $data['comment'] ?? null,
             ServiceOptionCatalog::normalize($data['selected_options'] ?? []),
         );

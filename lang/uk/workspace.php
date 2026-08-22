@@ -26,4 +26,5 @@ return [
     'status' => ['new' => 'Нові', 'accepted' => 'Прийняті', 'in_progress' => 'В роботі', 'waiting_guest' => 'Очікують гостя', 'ready' => 'Готово', 'completed' => 'Завершені', 'cancelled' => 'Скасовані'],
     'priority' => ['low' => 'Низький', 'normal' => 'Звичайний', 'high' => 'Високий', 'urgent' => 'Терміновий'],
     'app_update_title' => 'Доступне оновлення', 'app_update_message' => 'Оновіть застосунок, не закриваючи його.', 'app_update_action' => 'Оновити',
+    'payment_method' => 'Спосіб оплати', 'payment_method_hint' => 'Для безкоштовної послуги спосіб оплати не потрібен.', 'payment_method_required' => 'Виберіть спосіб оплати для платної послуги.', 'payment_options' => ['prepayment' => 'Повна передоплата', 'online' => 'Онлайн-оплата', 'cash' => 'Оплата готівкою', 'room_charge' => 'Оплата при виїзді'],
 ];

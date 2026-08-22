@@ -386,6 +386,7 @@ class GuestOrderingTest extends TestCase
         ]);
         $roomService = $this->service($company, 'Breakfast charged to room', 210000);
         $cashService = $this->service($company, 'Cash massage', 150000);
+        $cashService->update(['payment_method' => 'cash']);
         $stay = $this->stay($company, $room);
         $session = ['guest_session.'.$company->id => $stay->public_id];
 
@@ -423,6 +424,31 @@ class GuestOrderingTest extends TestCase
             ->assertOk()
             ->assertSee('Rp 210.000')
             ->assertDontSee('Rp 150.000');
+    }
+
+    public function test_guest_cannot_change_the_payment_method_set_for_a_service(): void
+    {
+        [$company, $room] = $this->hotel('Alpha Hotel');
+        $service = $this->service($company, 'Airport transfer', 300000);
+        $service->update(['payment_method' => 'online']);
+        $stay = $this->stay($company, $room);
+
+        $this->withSession(['guest_session.'.$company->id => $stay->public_id])
+            ->post(route('guest.orders.store', [$company, $service]), [
+                'quantity' => 1,
+                'payment_method' => 'room_charge',
+            ])
+            ->assertRedirect();
+
+        $order = ServiceRequest::firstOrFail();
+        $this->assertSame('online', $order->payment_method);
+        $this->assertSame('pending', $order->payment_status);
+
+        $this->withSession(['guest_session.'.$company->id => $stay->public_id])
+            ->get(route('guest.orders.create', [$company, $service]))
+            ->assertOk()
+            ->assertSee('Оплата онлайн')
+            ->assertDontSee('Выберите удобный вариант');
     }
 
     public function test_guest_can_confirm_a_free_request_waiting_for_guest(): void

@@ -41,4 +41,5 @@ return [
     'status' => ['new' => 'New', 'accepted' => 'Accepted', 'in_progress' => 'In progress', 'waiting_guest' => 'Waiting for guest', 'ready' => 'Ready / completed', 'completed' => 'Ready / completed', 'cancelled' => 'Cancelled'],
     'priority' => ['low' => 'Low', 'normal' => 'Normal', 'high' => 'High', 'urgent' => 'Urgent'],
     'app_update_title' => 'Update available', 'app_update_message' => 'Update the app without closing it.', 'app_update_action' => 'Update',
+    'payment_method' => 'Payment method', 'payment_method_hint' => 'No payment method is needed for a free service.', 'payment_method_required' => 'Choose a payment method for a paid service.', 'payment_options' => ['prepayment' => 'Full prepayment', 'online' => 'Online payment', 'cash' => 'Cash payment', 'room_charge' => 'Pay at checkout'],
 ];
